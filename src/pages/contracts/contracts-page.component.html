@@ -1,0 +1,206 @@
+<div class="flex-1 overflow-y-auto p-6 md:px-10 md:py-8 h-full relative">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Contratos</h1>
+      <p class="text-sm text-gray-500 mt-1">Gerenciamento de contratos e vigências</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 shadow-inner">
+        <button 
+          (click)="setViewMode('active')"
+          class="px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200"
+          [class]="viewMode() === 'active' && filterStatus().length === 0
+            ? 'bg-white dark:bg-gray-700 text-sco-blue dark:text-white shadow-sm' 
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5'"
+        >
+          Vigentes
+        </button>
+        <button 
+          (click)="setViewMode('history')"
+          class="px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200"
+          [class]="viewMode() === 'history' && filterStatus().length === 0
+            ? 'bg-white dark:bg-gray-700 text-sco-blue dark:text-white shadow-sm' 
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5'"
+        >
+          Histórico
+        </button>
+      </div>
+      <button 
+        (click)="openForm()"
+        class="bg-sco-green hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all shadow-sm hover:shadow active:scale-95"
+      >
+        <span class="material-symbols-outlined text-[20px]">add</span>
+        Novo Contrato
+      </button>
+    </div>
+  </div>
+
+  <!-- Search Bar & Toggle Filter -->
+  <div class="mb-4 flex gap-4">
+    <div class="relative flex-1 max-w-2xl">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+      <input 
+        (input)="updateSearch($event)"
+        [value]="searchQuery()"
+        class="w-full pl-10 pr-4 py-3 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all shadow-sm" 
+        placeholder="Busca rápida..." 
+        type="text"
+      />
+    </div>
+    <button 
+      (click)="toggleFilterPanel()"
+      class="flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-xl border transition-all shadow-sm"
+      [class]="isFilterPanelOpen() || filterStatus().length > 0 || filterSupplier() || filterNumber()
+        ? 'bg-blue-50 border-blue-200 text-sco-blue dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300' 
+        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'"
+    >
+      <span class="material-symbols-outlined text-[20px]">tune</span>
+      Filtros
+      @if (filterStatus().length > 0 || filterSupplier() || filterNumber()) {
+        <span class="flex h-2 w-2 rounded-full bg-sco-blue"></span>
+      }
+    </button>
+  </div>
+
+  <!-- Filter Panel -->
+  @if (isFilterPanelOpen()) {
+    <div class="mb-8 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg animate-in fade-in slide-in-from-top-4 duration-200">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <span class="material-symbols-outlined text-sco-blue">filter_alt</span>
+          Filtros Avançados
+        </h3>
+        <button (click)="clearFilters()" class="text-xs text-red-500 hover:text-red-700 font-medium hover:underline">
+          Limpar Filtros
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Status Filter -->
+        <div class="space-y-3">
+          <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</label>
+          <div class="flex flex-col gap-2">
+            <label class="flex items-center gap-2 cursor-pointer group">
+              <input type="checkbox" 
+                [checked]="filterStatus().includes(ContractStatus.VIGENTE)"
+                (change)="toggleStatusFilter(ContractStatus.VIGENTE)"
+                class="rounded border-gray-300 text-sco-green focus:ring-sco-green"
+              >
+              <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-sco-green transition-colors">Vigente</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer group">
+              <input type="checkbox" 
+                [checked]="filterStatus().includes(ContractStatus.FINALIZANDO)"
+                (change)="toggleStatusFilter(ContractStatus.FINALIZANDO)"
+                class="rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
+              >
+              <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-yellow-600 transition-colors">Finalizando</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer group">
+              <input type="checkbox" 
+                [checked]="filterStatus().includes(ContractStatus.RESCINDIDO)"
+                (change)="toggleStatusFilter(ContractStatus.RESCINDIDO)"
+                class="rounded border-gray-300 text-red-500 focus:ring-red-500"
+              >
+              <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-red-600 transition-colors">Rescindido</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Supplier Filter -->
+        <div class="space-y-3">
+          <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Fornecedor</label>
+          <input 
+            type="text" 
+            [ngModel]="filterSupplier()"
+            (ngModelChange)="filterSupplier.set($event)"
+            placeholder="Nome do fornecedor..."
+            class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-sco-blue outline-none"
+          >
+        </div>
+
+        <!-- Number Filter -->
+        <div class="space-y-3">
+          <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Número do Contrato</label>
+          <input 
+            type="text" 
+            [ngModel]="filterNumber()"
+            (ngModelChange)="filterNumber.set($event)"
+            placeholder="Ex: 124/2024"
+            class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-sco-blue outline-none"
+          >
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Filters & View Options -->
+  <div class="flex items-center justify-between mb-6 mt-6">
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Mostrando {{ activeCount() }} contratos</span>
+      @if (filterStatus().length > 0) {
+        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">Filtro de Status Ativo</span>
+      }
+    </div>
+    
+    <!-- Toggle View Buttons -->
+    <div class="flex bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-0.5">
+      <button 
+        (click)="setLayoutMode('grid')"
+        class="p-1.5 rounded transition-colors"
+        [class]="layoutMode() === 'grid' 
+          ? 'text-sco-blue bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300' 
+          : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'"
+        title="Visualização em Grade"
+      >
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+      </button>
+      <button 
+        (click)="setLayoutMode('list')"
+        class="p-1.5 rounded transition-colors"
+        [class]="layoutMode() === 'list' 
+          ? 'text-sco-blue bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300' 
+          : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'"
+        title="Visualização em Lista"
+      >
+        <span class="material-symbols-outlined text-[20px]">view_list</span>
+      </button>
+    </div>
+  </div>
+
+  @if (filteredContracts().length > 0) {
+    <!-- Main Content Area: Grid or List -->
+    @if (layoutMode() === 'grid') {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-10">
+        @for (contract of filteredContracts(); track contract.id) {
+          <app-contract-card [contract]="contract"></app-contract-card>
+        }
+      </div>
+    } @else {
+      <div class="pb-10">
+        <app-contract-list-view [contracts]="filteredContracts()"></app-contract-list-view>
+      </div>
+    }
+  } @else {
+    <!-- Empty State -->
+    <div class="col-span-full py-16 flex flex-col items-center justify-center text-gray-400">
+      <span class="material-symbols-outlined text-4xl mb-2 text-gray-300">search_off</span>
+      <p class="text-sm font-medium">Nenhum contrato encontrado.</p>
+      <button 
+        (click)="clearFilters()"
+        class="mt-4 text-sco-blue hover:underline text-sm font-medium"
+      >
+        Limpar todos os filtros
+      </button>
+    </div>
+  }
+
+  <!-- Modal Container -->
+  @if (isFormOpen()) {
+    <app-contract-form 
+      (close)="closeForm()" 
+      (save)="handleSave($event)"
+    ></app-contract-form>
+  }
+</div>

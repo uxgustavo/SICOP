@@ -1,0 +1,37 @@
+import { Component, signal } from '@angular/core';
+import { CommonModule, registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
+import { ContractsPageComponent } from './pages/contracts/contracts-page.component';
+import { ContractFormComponent } from './components/contract-form/contract-form.component';
+import { FinancialPageComponent } from './pages/financial/financial-page.component';
+
+registerLocaleData(localePt);
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [CommonModule, ContractsPageComponent, ContractFormComponent, FinancialPageComponent],
+  templateUrl: './app.component.html',
+})
+export class AppComponent {
+  // Navigation State
+  // Updated types to include 'financial'
+  view = signal<'list' | 'form' | 'financial'>('list');
+  sidebarOpen = false;
+
+  toggleSidebar() {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
+
+  showForm() {
+    this.view.set('form');
+  }
+
+  showList() {
+    this.view.set('list');
+  }
+
+  showFinancial() {
+    this.view.set('financial');
+  }
+}

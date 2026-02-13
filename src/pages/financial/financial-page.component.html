@@ -1,0 +1,161 @@
+<div class="flex-1 overflow-y-auto p-6 md:px-10 md:py-8 h-full">
+  
+  <!-- Header & Controls -->
+  <div class="flex flex-col gap-6 mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <!-- Title -->
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Lançamentos Financeiros</h1>
+        <p class="text-sm text-gray-500 mt-1">Histórico completo de transações e movimentações.</p>
+      </div>
+      
+      <!-- Tabs (Right Side) - Harmonized with Contracts Page (Segmented Control Style) -->
+      <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 shadow-inner self-start md:self-auto">
+        <button 
+          (click)="setTab('ALL')"
+          class="px-5 py-1.5 text-sm font-medium rounded-md transition-all duration-200"
+          [class]="activeTab() === 'ALL' 
+            ? 'bg-white dark:bg-gray-700 text-sco-blue dark:text-white shadow-sm' 
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5'"
+        >
+          Tudo
+        </button>
+        <button 
+          (click)="setTab('PAYMENTS')"
+          class="px-5 py-1.5 text-sm font-medium rounded-md transition-all duration-200"
+          [class]="activeTab() === 'PAYMENTS' 
+            ? 'bg-white dark:bg-gray-700 text-sco-blue dark:text-white shadow-sm' 
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5'"
+        >
+          Pagamentos
+        </button>
+        <button 
+          (click)="setTab('COMMITMENTS')"
+          class="px-5 py-1.5 text-sm font-medium rounded-md transition-all duration-200"
+          [class]="activeTab() === 'COMMITMENTS' 
+            ? 'bg-white dark:bg-gray-700 text-sco-blue dark:text-white shadow-sm' 
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5'"
+        >
+          Empenhos
+        </button>
+      </div>
+    </div>
+
+    <!-- Toolbar - Harmonized (Rounded-XL and py-3) -->
+    <div class="flex flex-col sm:flex-row gap-4">
+      <div class="relative flex-1 max-w-lg">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+        <input 
+          (input)="updateSearch($event)"
+          [value]="searchQuery()"
+          class="w-full pl-10 pr-4 py-3 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all shadow-sm" 
+          placeholder="Buscar lançamento..." 
+          type="text"
+        />
+      </div>
+      
+      <button class="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm">
+        <span class="material-symbols-outlined text-[20px]">filter_list</span>
+        Filtros
+      </button>
+
+      <div class="flex-1"></div> <!-- Spacer -->
+
+      <button class="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm">
+        <span class="material-symbols-outlined text-[20px]">download</span>
+        Exportar
+      </button>
+    </div>
+  </div>
+
+  <!-- Data Grid -->
+  <div class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
+        <!-- Table Head -->
+        <thead>
+          <tr class="bg-gray-50/50 dark:bg-gray-800/50">
+            <th class="w-16 px-6 py-4"></th> <!-- Icon Column -->
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Lançamento</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Contrato</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">ID do Empenho</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Data</th>
+            <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Tipo</th>
+            <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Valor</th>
+            <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Unidade Gestora</th>
+          </tr>
+        </thead>
+        
+        <!-- Table Body -->
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+          @for (item of filteredTransactions(); track item.id) {
+            <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              
+              <!-- Icon -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="h-10 w-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110" [class]="getIconClass(item.type)">
+                  <span class="material-symbols-outlined text-[20px]">{{ getIcon(item.type) }}</span>
+                </div>
+              </td>
+
+              <!-- Description -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.description }}</span>
+              </td>
+
+              <!-- Contract -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm text-gray-500 dark:text-gray-400 font-mono">{{ item.contractId }}</span>
+              </td>
+
+              <!-- Commitment ID -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm text-gray-500 dark:text-gray-400 font-mono">{{ item.commitmentId }}</span>
+              </td>
+
+              <!-- Date -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm text-gray-500 dark:text-gray-400">{{ item.date | date:'dd/MM/yyyy' }}</span>
+              </td>
+
+              <!-- Type Badge -->
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border shadow-sm" [class]="getTypeClass(item.type)">
+                  {{ getTypeLabel(item.type) }}
+                </span>
+              </td>
+
+              <!-- Amount -->
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <span class="text-sm font-bold text-gray-900 dark:text-white">R$ {{ item.amount | number:'1.2-2':'pt-BR' }}</span>
+              </td>
+
+              <!-- Department -->
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  {{ item.department }}
+                </span>
+              </td>
+
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer / Pagination -->
+    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+      <div class="text-sm text-gray-500 dark:text-gray-400">
+        Exibindo <span class="font-medium text-gray-900 dark:text-white">1-{{ filteredTransactions().length }}</span> de <span class="font-medium text-gray-900 dark:text-white">{{ mockTransactions.length }}</span> lançamentos
+      </div>
+      <div class="flex gap-2">
+        <button class="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors">
+          Anterior
+        </button>
+        <button class="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          Próximo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

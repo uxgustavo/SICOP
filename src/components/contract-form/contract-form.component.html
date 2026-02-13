@@ -1,0 +1,225 @@
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
+  
+  <!-- Backdrop -->
+  <div 
+    class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" 
+    (click)="onCancel()"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Modal Content -->
+  <div class="relative w-full max-w-4xl bg-white dark:bg-card-dark rounded-xl shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-card-dark rounded-t-xl z-10">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Novo Contrato</h2>
+        <p class="text-sm text-gray-500 mt-0.5">Preencha os dados do contrato</p>
+      </div>
+      <button 
+        (click)="onCancel()"
+        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="flex-1 overflow-y-auto p-6 md:px-8 bg-gray-50/50 dark:bg-background-dark/50">
+      <form [formGroup]="contractForm" (ngSubmit)="onSubmit()" class="space-y-8">
+        
+        <!-- Section A: Identification -->
+        <section class="bg-white dark:bg-card-dark p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+          <h3 class="text-lg font-semibold text-sco-blue dark:text-blue-400 mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined">assignment</span>
+            Dados do Contrato
+          </h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Number -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Número do Contrato *</label>
+              <input 
+                type="text" 
+                formControlName="number"
+                placeholder="Ex: 124/2024"
+                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all"
+                [class.border-red-500]="f['number'].invalid && f['number'].touched"
+              >
+              @if (f['number'].invalid && f['number'].touched) {
+                <span class="text-xs text-red-500 mt-1">Campo obrigatório.</span>
+              }
+            </div>
+
+            <!-- Process Number -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nº Processo SEI *</label>
+              <input 
+                type="text" 
+                formControlName="processNumber"
+                placeholder="Ex: sei.ma.def.br/..."
+                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all"
+                [class.border-red-500]="f['processNumber'].invalid && f['processNumber'].touched"
+              >
+              @if (f['processNumber'].invalid && f['processNumber'].touched) {
+                <span class="text-xs text-red-500 mt-1">Campo obrigatório.</span>
+              }
+            </div>
+
+            <!-- Supplier -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Fornecedor *</label>
+              <input 
+                type="text" 
+                formControlName="supplier"
+                placeholder="Razão Social ou Nome Fantasia"
+                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all"
+                [class.border-red-500]="f['supplier'].invalid && f['supplier'].touched"
+              >
+              @if (f['supplier'].invalid && f['supplier'].touched) {
+                <span class="text-xs text-red-500 mt-1">Campo obrigatório.</span>
+              }
+            </div>
+
+            <!-- Object -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Objeto do Contrato *</label>
+              <textarea 
+                formControlName="object"
+                rows="3"
+                placeholder="Descrição resumida do objeto contratual..."
+                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all resize-none"
+                [class.border-red-500]="f['object'].invalid && f['object'].touched"
+              ></textarea>
+              @if (f['object'].invalid && f['object'].touched) {
+                <span class="text-xs text-red-500 mt-1">Campo obrigatório.</span>
+              }
+            </div>
+          </div>
+        </section>
+
+        <!-- Section B: Validity -->
+        <section class="bg-white dark:bg-card-dark p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+          <h3 class="text-lg font-semibold text-sco-blue dark:text-blue-400 mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined">date_range</span>
+            Vigência
+          </h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Start Date -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Data de Início *</label>
+              <input 
+                type="date" 
+                max="9999-12-31"
+                formControlName="startDate"
+                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all"
+                [class.border-red-500]="f['startDate'].invalid && f['startDate'].touched"
+              >
+              @if (f['startDate'].invalid && f['startDate'].touched) {
+                <span class="text-xs text-red-500 mt-1">Campo obrigatório.</span>
+              }
+            </div>
+
+            <!-- End Date -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Data de Fim *</label>
+              <input 
+                type="date" 
+                max="9999-12-31"
+                formControlName="endDate"
+                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all"
+                [class.border-red-500]="(f['endDate'].invalid && f['endDate'].touched) || (contractForm.errors?.['dateRangeInvalid'] && f['endDate'].touched)"
+              >
+              @if (f['endDate'].hasError('required') && f['endDate'].touched) {
+                <span class="text-xs text-red-500 mt-1">Campo obrigatório.</span>
+              }
+              @if (contractForm.errors?.['dateRangeInvalid'] && !f['endDate'].hasError('required')) {
+                <span class="text-xs text-red-500 mt-1">Data fim deve ser maior que início.</span>
+              }
+            </div>
+          </div>
+        </section>
+
+        <!-- Section C: Financial & Classification -->
+        <section class="bg-white dark:bg-card-dark p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+          <h3 class="text-lg font-semibold text-sco-blue dark:text-blue-400 mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined">attach_money</span>
+            Financeiro e Classificação
+          </h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Total Value -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Valor Global (R$) *</label>
+              <input 
+                type="number" 
+                formControlName="totalValue"
+                placeholder="0,00"
+                min="0"
+                step="0.01"
+                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all"
+                [class.border-red-500]="f['totalValue'].invalid && f['totalValue'].touched"
+              >
+              @if (f['totalValue'].invalid && f['totalValue'].touched) {
+                <span class="text-xs text-red-500 mt-1">Valor inválido.</span>
+              }
+            </div>
+
+            <!-- Department -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Unidade Gestora *</label>
+              <select 
+                formControlName="department"
+                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all"
+                [class.border-red-500]="f['department'].invalid && f['department'].touched"
+              >
+                <option value="" disabled>Selecione...</option>
+                @for (dept of departments; track dept) {
+                  <option [value]="dept">{{ dept }}</option>
+                }
+              </select>
+              @if (f['department'].invalid && f['department'].touched) {
+                <span class="text-xs text-red-500 mt-1">Campo obrigatório.</span>
+              }
+            </div>
+
+            <!-- Status -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status Inicial *</label>
+              <select 
+                formControlName="status"
+                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all"
+              >
+                @for (opt of statusOptions; track opt) {
+                  <option [value]="opt">{{ opt }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </section>
+      </form>
+    </div>
+
+    <!-- Modal Footer / Actions -->
+    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-card-dark rounded-b-xl flex items-center justify-end gap-4">
+      <button 
+        type="button" 
+        (click)="onCancel()"
+        class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 transition-all"
+      >
+        Cancelar
+      </button>
+      <button 
+        (click)="contractForm.valid ? onSubmit() : contractForm.markAllAsTouched()"
+        type="button"
+        class="px-6 py-2.5 text-sm font-medium text-white bg-sco-green hover:bg-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2"
+      >
+        <span class="material-symbols-outlined text-[20px]">check</span>
+        Salvar
+      </button>
+    </div>
+
+  </div>
+</div>

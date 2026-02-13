@@ -1,0 +1,85 @@
+<div class="flex h-screen overflow-hidden">
+  <!-- Sidebar -->
+  <aside class="w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hidden md:flex flex-col">
+    <div class="h-16 flex items-center justify-center px-6">
+      <span class="font-bold text-2xl tracking-tight text-sco-blue dark:text-white">SICOP</span>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
+      <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-sco-blue transition-colors group" href="#">
+        <span class="material-symbols-outlined text-[22px] group-hover:text-sco-blue">dashboard</span>
+        Dashboard
+      </a>
+      
+      <!-- Contracts Link -->
+      <a 
+        (click)="showList()"
+        class="cursor-pointer flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group"
+        [class]="view() === 'list' || view() === 'form' 
+          ? 'bg-sco-blue/5 text-sco-blue dark:bg-white/5 dark:text-white' 
+          : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-sco-blue'"
+      >
+        <span class="material-symbols-outlined text-[22px]">description</span>
+        Contratos
+      </a>
+
+      <!-- Financial Link -->
+      <a 
+        (click)="showFinancial()"
+        class="cursor-pointer flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group"
+        [class]="view() === 'financial' 
+          ? 'bg-sco-blue/5 text-sco-blue dark:bg-white/5 dark:text-white' 
+          : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-sco-blue'"
+      >
+        <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+        Financeiro
+      </a>
+
+      <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-sco-blue transition-colors group" href="#">
+        <span class="material-symbols-outlined text-[22px] group-hover:text-sco-blue">monetization_on</span>
+        Orçamento
+      </a>
+      <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-sco-blue transition-colors group" href="#">
+        <span class="material-symbols-outlined text-[22px] group-hover:text-sco-blue">people</span>
+        Fornecedores
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <main class="flex-1 flex flex-col h-screen overflow-hidden bg-background-light dark:bg-background-dark">
+    <!-- Top Header -->
+    <header class="h-16 shrink-0 flex items-center justify-between px-8 bg-white/80 dark:bg-gray-800/90 backdrop-blur-sm z-10 sticky top-0 border-b border-gray-200/50 dark:border-gray-700">
+      <div class="flex items-center gap-4">
+        <!-- Mobile Menu Button -->
+        <button (click)="toggleSidebar()" class="md:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="p-2 text-gray-400 hover:text-sco-blue dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative">
+          <span class="material-symbols-outlined text-[22px]">notifications</span>
+          <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+        </button>
+        <div class="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-gray-700">
+          <div class="flex flex-col text-right hidden sm:flex">
+            <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">João Silva</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 truncate">Analista ADM</span>
+          </div>
+          <div class="h-9 w-9 rounded-full bg-sco-blue text-white flex items-center justify-center text-sm font-bold shadow-sm">
+            JS
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content Router -->
+    @if (view() === 'list') {
+      <app-contracts-page class="flex-1 min-h-0" (createContract)="showForm()"></app-contracts-page>
+    } @else if (view() === 'financial') {
+      <app-financial-page class="flex-1 min-h-0"></app-financial-page>
+    } @else {
+      <app-contract-form class="flex-1 min-h-0" (cancel)="showList()" (save)="showList()"></app-contract-form>
+    }
+    
+  </main>
+</div>
