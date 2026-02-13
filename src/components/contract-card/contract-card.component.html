@@ -1,5 +1,6 @@
 <div 
-  class="group bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col p-6 min-h-[220px]"
+  (click)="select.emit()"
+  class="group bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col p-6 min-h-[220px] cursor-pointer"
   [ngClass]="cardBorderClass()"
 >
   <!-- Header -->

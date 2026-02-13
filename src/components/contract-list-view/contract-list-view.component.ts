@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Contract, ContractStatus, calculateDaysRemaining, getEffectiveStatus } from '../../models/contract.model';
 
@@ -22,7 +22,10 @@ import { Contract, ContractStatus, calculateDaysRemaining, getEffectiveStatus } 
           </thead>
           <tbody class="bg-white dark:bg-card-dark divide-y divide-gray-200 dark:divide-gray-700">
             @for (contract of contracts(); track contract.id) {
-              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
+              <tr 
+                (click)="select.emit(contract.id)"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group cursor-pointer"
+              >
                 <!-- Number -->
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm font-semibold text-gray-900 dark:text-white font-mono">
@@ -67,7 +70,7 @@ import { Contract, ContractStatus, calculateDaysRemaining, getEffectiveStatus } 
                 <!-- Actions -->
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button class="text-gray-400 hover:text-sco-blue transition-colors">
-                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
                   </button>
                 </td>
               </tr>
@@ -80,6 +83,7 @@ import { Contract, ContractStatus, calculateDaysRemaining, getEffectiveStatus } 
 })
 export class ContractListViewComponent {
   contracts = input.required<Contract[]>();
+  select = output<string>();
 
   // Helper to determine status efficiently inside the loop
   private getStatusInfo(contract: Contract) {

@@ -18,6 +18,7 @@ export class ContractsPageComponent {
 
   // Navigation Event
   createContract = output<void>();
+  openContractDetails = output<string>();
 
   // Modal State
   isFormOpen = signal(false);
@@ -135,5 +136,9 @@ export class ContractsPageComponent {
   handleSave(data: any) {
     console.log('Main Page received saved data:', data);
     this.closeForm();
+  }
+
+  handleSelect(contractId: string) {
+    this.openContractDetails.emit(contractId);
   }
 }

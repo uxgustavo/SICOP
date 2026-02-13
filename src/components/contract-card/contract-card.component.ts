@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import { Contract, ContractStatus, calculateDaysRemaining, getEffectiveStatus } from '../../models/contract.model';
 
@@ -10,6 +10,9 @@ import { Contract, ContractStatus, calculateDaysRemaining, getEffectiveStatus } 
 })
 export class ContractCardComponent {
   contract = input.required<Contract>();
+  
+  // Output event when card is clicked
+  select = output<void>();
 
   daysRemaining = computed(() => {
     return calculateDaysRemaining(this.contract().endDate);

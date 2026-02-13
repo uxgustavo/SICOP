@@ -1,19 +1,21 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { Dotacao } from '../models/budget.model';
-import { Transaction, TransactionType } from '../models/transaction.model';
-import { ContractService } from './contract.service';
+import { Transaction } from '../models/transaction.model';
+import { FinancialService } from './financial.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BudgetService {
+  private financialService = inject(FinancialService);
   
   // Link to budgets via IDs defined in ContractService
-  // Contract ID 3 -> MOL
-  // Contract ID 2 -> Intelliway
-  // Contract ID 9 -> Leistung
-  // Contract ID 10 -> DB3
+  // Contract ID 3 -> MOL (074/2025)
+  // Contract ID 2 -> Intelliway (087/2025)
+  // Contract ID 9 -> Leistung (099/2026)
+  // Contract ID 10 -> DB3 (101/2026)
 
+  // Master Variable for Budgets
   dotacoes = signal<Dotacao[]>([
     {
       id: '1',
@@ -62,74 +64,18 @@ export class BudgetService {
   ]);
 
   /**
-   * Retorna o histórico de transações simulado para uma dotação específica
+   * Retorna o histórico de transações filtrando do serviço financeiro centralizado
    */
   getHistoryForBudget(budget: Dotacao): Transaction[] {
-    const baseDate = new Date(budget.data);
-    
-    if (budget.id === '1') {
-      return [
-        {
-          id: 't1',
-          description: 'Empenho Inicial Global',
-          contractId: '074/2025',
-          commitmentId: '2025NE001',
-          date: baseDate,
-          type: TransactionType.COMMITMENT,
-          amount: 92925.00,
-          department: 'FADEP',
-          budgetDescription: budget.descricao
-        },
-        {
-          id: 't2',
-          description: 'Pagamento Nota Fiscal 001',
-          contractId: '074/2025',
-          commitmentId: '2025NE001',
-          date: new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 5),
-          type: TransactionType.LIQUIDATION,
-          amount: 40000.00,
-          department: 'FADEP',
-          budgetDescription: budget.descricao
-        },
-        {
-          id: 't3',
-          description: 'Pagamento Nota Fiscal 002',
-          contractId: '074/2025',
-          commitmentId: '2025NE001',
-          date: new Date(baseDate.getFullYear(), baseDate.getMonth() + 2, 5),
-          type: TransactionType.LIQUIDATION,
-          amount: 52925.00,
-          department: 'FADEP',
-          budgetDescription: budget.descricao
-        }
-      ];
-    } else if (budget.id === '2') {
-       return [
-        {
-          id: 't4',
-          description: 'Empenho Estimativo',
-          contractId: '087/2025',
-          commitmentId: '2026NE055',
-          date: baseDate,
-          type: TransactionType.COMMITMENT,
-          amount: 50000.00,
-          department: 'FADEP',
-          budgetDescription: budget.descricao
-        },
-        {
-          id: 't5',
-          description: 'Reforço de Dotação',
-          contractId: '087/2025',
-          commitmentId: 'N/A',
-          date: new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 10),
-          type: TransactionType.REINFORCEMENT,
-          amount: 244078.40,
-          department: 'FADEP',
-          budgetDescription: budget.descricao
-        }
-      ];
-    }
-    
-    return [];
+    // Filtra diretamente da fonte única de verdade no FinancialService
+    // Usa a descrição da dotação como chave de vínculo (conforme definido no FinancialService)
+    return this.financialService.getTransactionsByBudget(budget.descricao);
+  }
+
+  /**
+   * Retorna todas as dotações vinculadas a um contrato específico
+   */
+  getBudgetsByContractId(contractId: string): Dotacao[] {
+    return this.dotacoes().filter(d => d.contractId === contractId);
   }
 }

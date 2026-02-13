@@ -5,6 +5,7 @@ import { ContractsPageComponent } from './pages/contracts/contracts-page.compone
 import { ContractFormComponent } from './components/contract-form/contract-form.component';
 import { FinancialPageComponent } from './pages/financial/financial-page.component';
 import { BudgetPageComponent } from './pages/budget/budget-page.component';
+import { ContractDetailsPageComponent } from './pages/contract-details/contract-details-page.component';
 
 registerLocaleData(localePt);
 
@@ -16,15 +17,17 @@ registerLocaleData(localePt);
     ContractsPageComponent, 
     ContractFormComponent, 
     FinancialPageComponent,
-    BudgetPageComponent
+    BudgetPageComponent,
+    ContractDetailsPageComponent
   ],
   providers: [{ provide: LOCALE_ID, useValue: 'pt-BR' }],
   templateUrl: './app.component.html',
 })
 export class AppComponent {
   // Navigation State
-  // Updated types to include 'financial' and 'budget'
-  view = signal<'list' | 'form' | 'financial' | 'budget'>('list');
+  view = signal<'list' | 'form' | 'financial' | 'budget' | 'contract-details'>('list');
+  selectedContractId = signal<string | null>(null);
+  
   sidebarOpen = false;
 
   toggleSidebar() {
@@ -37,6 +40,7 @@ export class AppComponent {
 
   showList() {
     this.view.set('list');
+    this.selectedContractId.set(null);
   }
 
   showFinancial() {
@@ -45,5 +49,10 @@ export class AppComponent {
 
   showBudget() {
     this.view.set('budget');
+  }
+
+  openContractDetails(id: string) {
+    this.selectedContractId.set(id);
+    this.view.set('contract-details');
   }
 }

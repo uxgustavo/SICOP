@@ -174,12 +174,18 @@
     @if (layoutMode() === 'grid') {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-10">
         @for (contract of filteredContracts(); track contract.id) {
-          <app-contract-card [contract]="contract"></app-contract-card>
+          <app-contract-card 
+            [contract]="contract"
+            (select)="handleSelect(contract.id)"
+          ></app-contract-card>
         }
       </div>
     } @else {
       <div class="pb-10">
-        <app-contract-list-view [contracts]="filteredContracts()"></app-contract-list-view>
+        <app-contract-list-view 
+          [contracts]="filteredContracts()"
+          (select)="handleSelect($event)"
+        ></app-contract-list-view>
       </div>
     }
   } @else {

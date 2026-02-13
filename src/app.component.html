@@ -14,7 +14,7 @@
       <a 
         (click)="showList()"
         class="cursor-pointer flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group"
-        [class]="view() === 'list' || view() === 'form' 
+        [class]="view() === 'list' || view() === 'form' || view() === 'contract-details'
           ? 'bg-sco-blue/5 text-sco-blue dark:bg-white/5 dark:text-white' 
           : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-sco-blue'"
       >
@@ -82,11 +82,21 @@
 
     <!-- Page Content Router -->
     @if (view() === 'list') {
-      <app-contracts-page class="flex-1 min-h-0" (createContract)="showForm()"></app-contracts-page>
+      <app-contracts-page 
+        class="flex-1 min-h-0" 
+        (createContract)="showForm()"
+        (openContractDetails)="openContractDetails($event)"
+      ></app-contracts-page>
     } @else if (view() === 'financial') {
       <app-financial-page class="flex-1 min-h-0"></app-financial-page>
     } @else if (view() === 'budget') {
       <app-budget-page class="flex-1 min-h-0"></app-budget-page>
+    } @else if (view() === 'contract-details' && selectedContractId()) {
+      <app-contract-details-page 
+        class="flex-1 min-h-0"
+        [contractId]="selectedContractId()!"
+        (back)="showList()"
+      ></app-contract-details-page>
     } @else {
       <app-contract-form class="flex-1 min-h-0" (cancel)="showList()" (save)="showList()"></app-contract-form>
     }
