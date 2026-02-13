@@ -79,6 +79,7 @@
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Lançamento</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Contrato</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">ID do Empenho</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Dotação</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Data</th>
             <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Tipo</th>
             <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Valor</th>
@@ -111,6 +112,13 @@
               <!-- Commitment ID -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="text-sm text-gray-500 dark:text-gray-400 font-mono">{{ item.commitmentId }}</span>
+              </td>
+
+              <!-- Budget Description (New Column) -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  {{ item.budgetDescription }}
+                </span>
               </td>
 
               <!-- Date -->

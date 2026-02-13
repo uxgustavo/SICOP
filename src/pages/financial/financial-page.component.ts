@@ -37,7 +37,8 @@ export class FinancialPageComponent {
       date: new Date(2025, 11, 12), // 12/12/2025
       type: TransactionType.LIQUIDATION,
       amount: 196.14,
-      department: 'FADEP'
+      department: 'FADEP',
+      budgetDescription: '02/2026 - Intelliway Tecnologia'
     },
     {
       id: '2',
@@ -47,7 +48,8 @@ export class FinancialPageComponent {
       date: new Date(2025, 11, 12), // 12/12/2025
       type: TransactionType.CANCELLATION,
       amount: 43503.41,
-      department: 'FADEP'
+      department: 'FADEP',
+      budgetDescription: '02/2026 - Intelliway Tecnologia'
     },
     {
       id: '3',
@@ -57,7 +59,8 @@ export class FinancialPageComponent {
       date: new Date(2025, 6, 31), // 31/07/2025
       type: TransactionType.COMMITMENT,
       amount: 92925.00,
-      department: 'FADEP'
+      department: 'FADEP',
+      budgetDescription: '01/2025 - MOL Mediação Online'
     },
     {
       id: '4',
@@ -67,7 +70,8 @@ export class FinancialPageComponent {
       date: new Date(2025, 10, 27), // 27/11/2025
       type: TransactionType.REINFORCEMENT,
       amount: 23231.25,
-      department: 'FADEP'
+      department: 'FADEP',
+      budgetDescription: '01/2025 - MOL Mediação Online'
     },
     {
       id: '5',
@@ -77,7 +81,8 @@ export class FinancialPageComponent {
       date: new Date(2025, 11, 2), // 02/12/2025
       type: TransactionType.LIQUIDATION,
       amount: 23231.25,
-      department: 'FADEP'
+      department: 'FADEP',
+      budgetDescription: '01/2025 - MOL Mediação Online'
     }
   ];
 

@@ -2,14 +2,14 @@ export type UnidadeOrcamentaria = 'FADEP' | 'DEFENSORIA';
 
 export interface Dotacao {
   id: string;
-  descricao: string; // Ex: "Dotação 2026 - MOL"
+  descricao: string; // Ex: "01/2025 - Nome"
   linkSei: string;
-  cnpj: string; // Novo campo
+  cnpj: string; 
   data: Date;
   valorTotal: number;
   valorUtilizado: number;
   unidadeOrcamentaria: UnidadeOrcamentaria;
-  contratoVinculado: string; // Nome do contrato para exibição
+  contractId: string; // Vínculo real com o contrato
 }
 
 /**

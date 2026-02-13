@@ -14,6 +14,7 @@ export interface Transaction {
   type: TransactionType;
   amount: number;
   department: string;
+  budgetDescription: string; // Vínculo com a Dotação Orçamentária
 }
 
 // Helpers for UI logic (Icons, Colors, Labels) based on Type

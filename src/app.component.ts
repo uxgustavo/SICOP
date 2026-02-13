@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, LOCALE_ID } from '@angular/core';
 import { CommonModule, registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import { ContractsPageComponent } from './pages/contracts/contracts-page.component';
@@ -18,6 +18,7 @@ registerLocaleData(localePt);
     FinancialPageComponent,
     BudgetPageComponent
   ],
+  providers: [{ provide: LOCALE_ID, useValue: 'pt-BR' }],
   templateUrl: './app.component.html',
 })
 export class AppComponent {

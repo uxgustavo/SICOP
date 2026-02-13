@@ -2,7 +2,9 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BudgetService } from '../../services/budget.service';
+import { ContractService } from '../../services/contract.service';
 import { Dotacao, calcularSaldoDotacao, getUnidadeBadgeClass, UnidadeOrcamentaria } from '../../models/budget.model';
+import { Transaction, getTransactionTypeLabel, getTransactionTypeColorClass, getTransactionIcon, getTransactionIconBgClass } from '../../models/transaction.model';
 
 @Component({
   selector: 'app-budget-page',
@@ -12,48 +14,110 @@ import { Dotacao, calcularSaldoDotacao, getUnidadeBadgeClass, UnidadeOrcamentari
 })
 export class BudgetPageComponent {
   private budgetService = inject(BudgetService);
+  private contractService = inject(ContractService);
 
-  // State
+  // Layout State
+  layoutMode = signal<'grid' | 'list'>('grid');
+
+  // Search
   searchQuery = signal('');
-  activeUnitFilter = signal<'ALL' | UnidadeOrcamentaria>('ALL');
+  
+  // Advanced Filter State
+  isFilterPanelOpen = signal(false);
+  filterUnit = signal<UnidadeOrcamentaria | 'ALL'>('ALL');
+  filterNoBalance = signal<boolean>(false);
+  filterMinBalance = signal<number | null>(null);
+
+  // Selection State (Side Panel)
+  selectedBudget = signal<Dotacao | null>(null);
+  selectedBudgetHistory = signal<Transaction[]>([]);
 
   // Helpers
   calcSaldo = calcularSaldoDotacao;
   getBadgeClass = getUnidadeBadgeClass;
 
+  // Transaction Helpers
+  getTypeLabel = getTransactionTypeLabel;
+  getTypeClass = getTransactionTypeColorClass;
+  getIcon = getTransactionIcon;
+  getIconClass = getTransactionIconBgClass;
+
+  // Helper to get contract info
+  getContract(id: string) {
+    return this.contractService.getContractById(id);
+  }
+
   // Computed Logic
   filteredDotacoes = computed(() => {
     const all = this.budgetService.dotacoes();
     const query = this.searchQuery().toLowerCase();
-    const unit = this.activeUnitFilter();
+    
+    // Filters
+    const unit = this.filterUnit();
+    const noBalance = this.filterNoBalance();
+    const minBalance = this.filterMinBalance();
 
     return all.filter(d => {
-      // 1. Unit Filter
-      if (unit !== 'ALL' && d.unidadeOrcamentaria !== unit) {
-        return false;
-      }
+      const saldo = calcularSaldoDotacao(d);
+      const contract = this.getContract(d.contractId);
+      const contractName = contract?.supplierName || '';
 
-      // 2. Text Search
-      if (!query) return true;
-      return (
+      // 1. Text Search
+      const matchesSearch = !query || 
         d.descricao.toLowerCase().includes(query) ||
-        d.contratoVinculado.toLowerCase().includes(query) ||
-        d.linkSei.toLowerCase().includes(query)
-      );
+        contractName.toLowerCase().includes(query) ||
+        d.linkSei.toLowerCase().includes(query);
+
+      if (!matchesSearch) return false;
+
+      // 2. Unit Filter
+      if (unit !== 'ALL' && d.unidadeOrcamentaria !== unit) return false;
+
+      // 3. No Balance Filter (Strictly 0 or less)
+      if (noBalance && saldo > 0) return false;
+
+      // 4. Min Balance Filter (Upper limit / "Below X")
+      // User asks for "saldo abaixo de determinado valor". 
+      // If user enters 1000, we show items with saldo < 1000.
+      if (minBalance !== null && saldo >= minBalance) return false;
+
+      return true;
     });
   });
 
   // Actions
-  setUnitFilter(filter: 'ALL' | UnidadeOrcamentaria) {
-    this.activeUnitFilter.set(filter);
+  setLayoutMode(mode: 'grid' | 'list') {
+    this.layoutMode.set(mode);
+  }
+
+  toggleFilterPanel() {
+    this.isFilterPanelOpen.update(v => !v);
   }
 
   updateSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
   }
+  
+  clearFilters() {
+    this.filterUnit.set('ALL');
+    this.filterNoBalance.set(false);
+    this.filterMinBalance.set(null);
+    this.searchQuery.set('');
+  }
 
-  // Visual helper for balance text color
+  // Selection Logic
+  openDetails(dotacao: Dotacao) {
+    this.selectedBudget.set(dotacao);
+    const history = this.budgetService.getHistoryForBudget(dotacao);
+    this.selectedBudgetHistory.set(history);
+  }
+
+  closeDetails() {
+    this.selectedBudget.set(null);
+    this.selectedBudgetHistory.set([]);
+  }
+
   getBalanceColor(dotacao: Dotacao): string {
     const saldo = this.calcSaldo(dotacao);
     if (saldo <= 0) return 'text-red-600 dark:text-red-400 font-bold';
