@@ -1,0 +1,155 @@
+<div class="flex-1 overflow-y-auto p-6 md:px-10 md:py-8 h-full">
+  
+  <!-- Header & Controls -->
+  <div class="flex flex-col gap-6 mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <!-- Title -->
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Dotações Orçamentárias</h1>
+        <p class="text-sm text-gray-500 mt-1">Gestão e controle de saldo das dotações por unidade.</p>
+      </div>
+    </div>
+
+    <!-- Toolbar: Search & Filter Tabs -->
+    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+      
+      <!-- Search Input -->
+      <div class="relative flex-1 max-w-lg w-full">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+        <input 
+          (input)="updateSearch($event)"
+          [value]="searchQuery()"
+          class="w-full pl-10 pr-4 py-3 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all shadow-sm" 
+          placeholder="Buscar dotação, contrato ou SEI..." 
+          type="text"
+        />
+      </div>
+
+      <!-- Unit Filters (Segmented Control) -->
+      <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 shadow-inner w-full md:w-auto overflow-x-auto">
+        <button 
+          (click)="setUnitFilter('ALL')"
+          class="px-5 py-1.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap flex-1 md:flex-none"
+          [class]="activeUnitFilter() === 'ALL' 
+            ? 'bg-white dark:bg-gray-700 text-sco-blue dark:text-white shadow-sm' 
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5'"
+        >
+          Tudo
+        </button>
+        <button 
+          (click)="setUnitFilter('FADEP')"
+          class="px-5 py-1.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap flex-1 md:flex-none"
+          [class]="activeUnitFilter() === 'FADEP' 
+            ? 'bg-white dark:bg-gray-700 text-sco-blue dark:text-white shadow-sm' 
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5'"
+        >
+          FADEP
+        </button>
+        <button 
+          (click)="setUnitFilter('DEFENSORIA')"
+          class="px-5 py-1.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap flex-1 md:flex-none"
+          [class]="activeUnitFilter() === 'DEFENSORIA' 
+            ? 'bg-white dark:bg-gray-700 text-sco-blue dark:text-white shadow-sm' 
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5'"
+        >
+          Defensoria
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Grid -->
+  <div class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
+        <!-- Table Head -->
+        <thead>
+          <tr class="bg-gray-50/50 dark:bg-gray-800/50">
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Dotação</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">CNPJ</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Unidade</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Link SEI</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Data</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Valor Total</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Utilizado</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Saldo</th>
+            <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Ações</th>
+          </tr>
+        </thead>
+        
+        <!-- Table Body -->
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+          @for (item of filteredDotacoes(); track item.id) {
+            <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              
+              <!-- Description (Company Name removed from sub-row) -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex flex-col">
+                  <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.descricao }}</span>
+                </div>
+              </td>
+
+              <!-- CNPJ (New Column) -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm text-gray-600 dark:text-gray-400 font-mono">{{ item.cnpj }}</span>
+              </td>
+
+              <!-- Unit Badge -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border shadow-sm" [class]="getBadgeClass(item.unidadeOrcamentaria)">
+                  {{ item.unidadeOrcamentaria }}
+                </span>
+              </td>
+
+              <!-- Link SEI -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <a href="#" class="text-sm text-sco-blue hover:underline font-mono">{{ item.linkSei }}</a>
+              </td>
+
+              <!-- Date -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm text-gray-500 dark:text-gray-400">{{ item.data | date:'dd/MM/yyyy' }}</span>
+              </td>
+
+              <!-- Total Value -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm font-medium text-gray-900 dark:text-white">
+                  {{ item.valorTotal | currency:'BRL':'symbol':'1.2-2' }}
+                </span>
+              </td>
+
+              <!-- Used Value -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  {{ item.valorUtilizado | currency:'BRL':'symbol':'1.2-2' }}
+                </span>
+              </td>
+
+              <!-- Balance (Calculated) -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm" [class]="getBalanceColor(item)">
+                  {{ calcSaldo(item) | currency:'BRL':'symbol':'1.2-2' }}
+                </span>
+              </td>
+
+              <!-- Actions -->
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <button class="text-gray-400 hover:text-sco-blue transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <span class="material-symbols-outlined text-[20px]">more_vert</span>
+                </button>
+              </td>
+
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Footer / Count -->
+    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-800/30">
+      <div class="text-xs text-gray-500 dark:text-gray-400">
+        Total de <span class="font-bold text-gray-700 dark:text-gray-300">{{ filteredDotacoes().length }}</span> dotações encontradas.
+      </div>
+    </div>
+  </div>
+</div>

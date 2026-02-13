@@ -4,19 +4,26 @@ import localePt from '@angular/common/locales/pt';
 import { ContractsPageComponent } from './pages/contracts/contracts-page.component';
 import { ContractFormComponent } from './components/contract-form/contract-form.component';
 import { FinancialPageComponent } from './pages/financial/financial-page.component';
+import { BudgetPageComponent } from './pages/budget/budget-page.component';
 
 registerLocaleData(localePt);
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, ContractsPageComponent, ContractFormComponent, FinancialPageComponent],
+  imports: [
+    CommonModule, 
+    ContractsPageComponent, 
+    ContractFormComponent, 
+    FinancialPageComponent,
+    BudgetPageComponent
+  ],
   templateUrl: './app.component.html',
 })
 export class AppComponent {
   // Navigation State
-  // Updated types to include 'financial'
-  view = signal<'list' | 'form' | 'financial'>('list');
+  // Updated types to include 'financial' and 'budget'
+  view = signal<'list' | 'form' | 'financial' | 'budget'>('list');
   sidebarOpen = false;
 
   toggleSidebar() {
@@ -33,5 +40,9 @@ export class AppComponent {
 
   showFinancial() {
     this.view.set('financial');
+  }
+
+  showBudget() {
+    this.view.set('budget');
   }
 }
