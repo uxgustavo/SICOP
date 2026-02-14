@@ -7,6 +7,7 @@ import { FinancialPageComponent } from './pages/financial/financial-page.compone
 import { BudgetPageComponent } from './pages/budget/budget-page.component';
 import { ContractDetailsPageComponent } from './pages/contract-details/contract-details-page.component';
 import { DashboardPageComponent } from './pages/dashboard/dashboard-page.component';
+import { SuppliersPageComponent } from './pages/suppliers/suppliers-page.component';
 
 registerLocaleData(localePt);
 
@@ -20,14 +21,15 @@ registerLocaleData(localePt);
     FinancialPageComponent,
     BudgetPageComponent,
     ContractDetailsPageComponent,
-    DashboardPageComponent
+    DashboardPageComponent,
+    SuppliersPageComponent
   ],
   providers: [{ provide: LOCALE_ID, useValue: 'pt-BR' }],
   templateUrl: './app.component.html',
 })
 export class AppComponent {
   // Navigation State
-  view = signal<'dashboard' | 'list' | 'form' | 'financial' | 'budget' | 'contract-details'>('dashboard');
+  view = signal<'dashboard' | 'list' | 'form' | 'financial' | 'budget' | 'contract-details' | 'suppliers'>('dashboard');
   selectedContractId = signal<string | null>(null);
   
   sidebarOpen = false;
@@ -56,6 +58,10 @@ export class AppComponent {
 
   showBudget() {
     this.view.set('budget');
+  }
+  
+  showSuppliers() {
+    this.view.set('suppliers');
   }
 
   openContractDetails(id: string) {

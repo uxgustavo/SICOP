@@ -1,36 +1,14 @@
 <div class="flex-1 overflow-y-auto p-6 md:px-10 md:py-8 h-full relative">
   
   <!-- Header & Controls -->
-  <div class="flex flex-col gap-6 mb-8">
+  <div class="flex flex-col gap-6 mb-6">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Dotações Orçamentárias</h1>
         <p class="text-sm text-gray-500 mt-1">Gestão de saldos vinculados aos contratos da aplicação.</p>
       </div>
       
-      <!-- Layout Toggle -->
-      <div class="flex bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-0.5 self-start md:self-auto">
-        <button 
-          (click)="setLayoutMode('grid')"
-          class="p-1.5 rounded transition-colors"
-          [class]="layoutMode() === 'grid' 
-            ? 'text-sco-blue bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300' 
-            : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'"
-          title="Grade"
-        >
-          <span class="material-symbols-outlined text-[20px]">grid_view</span>
-        </button>
-        <button 
-          (click)="setLayoutMode('list')"
-          class="p-1.5 rounded transition-colors"
-          [class]="layoutMode() === 'list' 
-            ? 'text-sco-blue bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300' 
-            : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'"
-          title="Lista"
-        >
-          <span class="material-symbols-outlined text-[20px]">view_list</span>
-        </button>
-      </div>
+      <!-- Layout Toggle Removed from here -->
     </div>
 
     <!-- Toolbar: Search & Filter Toggle -->
@@ -120,6 +98,37 @@
     </div>
   }
 
+  <!-- View Options Row (New Standard) -->
+  <div class="flex items-center justify-between mb-6 mt-6">
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Mostrando {{ filteredDotacoes().length }} dotações</span>
+    </div>
+    
+    <!-- Layout Toggle Moved Here -->
+    <div class="flex bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-0.5">
+      <button 
+        (click)="setLayoutMode('grid')"
+        class="p-1.5 rounded transition-colors"
+        [class]="layoutMode() === 'grid' 
+          ? 'text-sco-blue bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300' 
+          : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'"
+        title="Grade"
+      >
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+      </button>
+      <button 
+        (click)="setLayoutMode('list')"
+        class="p-1.5 rounded transition-colors"
+        [class]="layoutMode() === 'list' 
+          ? 'text-sco-blue bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300' 
+          : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'"
+        title="Lista"
+      >
+        <span class="material-symbols-outlined text-[20px]">view_list</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Content: Grid or List -->
   @if (filteredDotacoes().length > 0) {
     
@@ -150,7 +159,7 @@
                 <div class="flex flex-col">
                   <span class="text-xs text-gray-400 font-semibold uppercase">Contrato</span>
                   <span class="text-sm font-medium text-gray-700 dark:text-gray-300 font-mono">
-                    Contrato {{ getContract(item.contractId)?.number || '---' }}
+                    {{ getContract(item.contractId)?.number || '---' }}
                   </span>
                 </div>
                 
@@ -212,7 +221,7 @@
                   <!-- Contrato Column -->
                   <td class="px-6 py-4 whitespace-nowrap">
                      <span class="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">
-                       Contrato {{ getContract(item.contractId)?.number }}
+                       {{ getContract(item.contractId)?.number }}
                      </span>
                   </td>
                   <!-- Contratada Column (New) -->
