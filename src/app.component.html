@@ -5,8 +5,15 @@
       <span class="font-bold text-2xl tracking-tight text-sco-blue dark:text-white">SICOP</span>
     </div>
     <nav class="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-      <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-sco-blue transition-colors group" href="#">
-        <span class="material-symbols-outlined text-[22px] group-hover:text-sco-blue">dashboard</span>
+      <!-- Dashboard Link -->
+      <a 
+        (click)="showDashboard()"
+        class="cursor-pointer flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group"
+        [class]="view() === 'dashboard'
+          ? 'bg-sco-blue/5 text-sco-blue dark:bg-white/5 dark:text-white' 
+          : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-sco-blue'"
+      >
+        <span class="material-symbols-outlined text-[22px]">dashboard</span>
         Dashboard
       </a>
       
@@ -81,7 +88,12 @@
     </header>
 
     <!-- Page Content Router -->
-    @if (view() === 'list') {
+    @if (view() === 'dashboard') {
+      <app-dashboard-page 
+        class="flex-1 min-h-0"
+        (navigate)="handleDashboardNavigation($event)"
+      ></app-dashboard-page>
+    } @else if (view() === 'list') {
       <app-contracts-page 
         class="flex-1 min-h-0" 
         (createContract)="showForm()"

@@ -6,6 +6,7 @@ import { ContractFormComponent } from './components/contract-form/contract-form.
 import { FinancialPageComponent } from './pages/financial/financial-page.component';
 import { BudgetPageComponent } from './pages/budget/budget-page.component';
 import { ContractDetailsPageComponent } from './pages/contract-details/contract-details-page.component';
+import { DashboardPageComponent } from './pages/dashboard/dashboard-page.component';
 
 registerLocaleData(localePt);
 
@@ -18,20 +19,26 @@ registerLocaleData(localePt);
     ContractFormComponent, 
     FinancialPageComponent,
     BudgetPageComponent,
-    ContractDetailsPageComponent
+    ContractDetailsPageComponent,
+    DashboardPageComponent
   ],
   providers: [{ provide: LOCALE_ID, useValue: 'pt-BR' }],
   templateUrl: './app.component.html',
 })
 export class AppComponent {
   // Navigation State
-  view = signal<'list' | 'form' | 'financial' | 'budget' | 'contract-details'>('list');
+  view = signal<'dashboard' | 'list' | 'form' | 'financial' | 'budget' | 'contract-details'>('dashboard');
   selectedContractId = signal<string | null>(null);
   
   sidebarOpen = false;
 
   toggleSidebar() {
     this.sidebarOpen = !this.sidebarOpen;
+  }
+
+  showDashboard() {
+    this.view.set('dashboard');
+    this.selectedContractId.set(null);
   }
 
   showForm() {
@@ -54,5 +61,11 @@ export class AppComponent {
   openContractDetails(id: string) {
     this.selectedContractId.set(id);
     this.view.set('contract-details');
+  }
+
+  handleDashboardNavigation(target: 'contracts' | 'financial' | 'budget') {
+    if (target === 'contracts') this.showList();
+    if (target === 'financial') this.showFinancial();
+    if (target === 'budget') this.showBudget();
   }
 }
