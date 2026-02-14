@@ -1,5 +1,6 @@
-import { Component, signal, LOCALE_ID } from '@angular/core';
+import { Component, signal, LOCALE_ID, inject } from '@angular/core';
 import { CommonModule, registerLocaleData } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import localePt from '@angular/common/locales/pt';
 import { ContractsPageComponent } from './pages/contracts/contracts-page.component';
 import { ContractFormComponent } from './components/contract-form/contract-form.component';
@@ -8,6 +9,7 @@ import { BudgetPageComponent } from './pages/budget/budget-page.component';
 import { ContractDetailsPageComponent } from './pages/contract-details/contract-details-page.component';
 import { DashboardPageComponent } from './pages/dashboard/dashboard-page.component';
 import { SuppliersPageComponent } from './pages/suppliers/suppliers-page.component';
+import { AppContextService } from './services/app-context.service';
 
 registerLocaleData(localePt);
 
@@ -16,6 +18,7 @@ registerLocaleData(localePt);
   standalone: true,
   imports: [
     CommonModule, 
+    FormsModule,
     ContractsPageComponent, 
     ContractFormComponent, 
     FinancialPageComponent,
@@ -28,6 +31,9 @@ registerLocaleData(localePt);
   templateUrl: './app.component.html',
 })
 export class AppComponent {
+  // Global App Context (Year Selection)
+  public contextService = inject(AppContextService);
+
   // Navigation State
   view = signal<'dashboard' | 'list' | 'form' | 'financial' | 'budget' | 'contract-details' | 'suppliers'>('dashboard');
   selectedContractId = signal<string | null>(null);

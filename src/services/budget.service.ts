@@ -1,13 +1,15 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, computed } from '@angular/core';
 import { Dotacao } from '../models/budget.model';
 import { Transaction } from '../models/transaction.model';
 import { FinancialService } from './financial.service';
+import { AppContextService } from './app-context.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BudgetService {
   private financialService = inject(FinancialService);
+  private appContext = inject(AppContextService);
   
   // Link to budgets via IDs defined in ContractService
   // Contract ID 3 -> MOL (074/2025)
@@ -16,7 +18,8 @@ export class BudgetService {
   // Contract ID 10 -> DB3 (101/2026)
 
   // Master Variable for Budgets
-  dotacoes = signal<Dotacao[]>([
+  // Renamed to _dotacoes to handle raw data
+  private _dotacoes = signal<Dotacao[]>([
     {
       id: '1',
       descricao: '01/2025 - MOL Mediação Online',
@@ -62,6 +65,14 @@ export class BudgetService {
       contractId: '10'
     }
   ]);
+
+  // Reactive Computed Signal: Filters Budgets by Global Fiscal Year
+  dotacoes = computed(() => {
+    const selectedYear = this.appContext.anoExercicio();
+    const allBudgets = this._dotacoes();
+    
+    return allBudgets.filter(d => d.data.getFullYear() === selectedYear);
+  });
 
   /**
    * Retorna o histórico de transações filtrando do serviço financeiro centralizado

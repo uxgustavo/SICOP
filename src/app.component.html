@@ -78,6 +78,21 @@
         </button>
       </div>
       <div class="flex items-center gap-4">
+        
+        <!-- Year Selector (Context) -->
+        <div class="flex items-center gap-2 border-r border-gray-200 dark:border-gray-700 pr-4">
+          <span class="material-symbols-outlined text-gray-500">calendar_today</span>
+          <select 
+            [ngModel]="contextService.anoExercicio()" 
+            (ngModelChange)="contextService.setAno($event)"
+            class="bg-transparent border-none outline-none focus:ring-0 font-bold text-sco-blue dark:text-white cursor-pointer text-sm p-0 pr-8"
+          >
+            @for (year of contextService.availableYears; track year) {
+              <option [value]="year">{{ year }}</option>
+            }
+          </select>
+        </div>
+
         <button class="p-2 text-gray-400 hover:text-sco-blue dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative">
           <span class="material-symbols-outlined text-[22px]">notifications</span>
           <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>

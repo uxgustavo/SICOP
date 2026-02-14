@@ -1,13 +1,16 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Transaction, TransactionType } from '../models/transaction.model';
+import { AppContextService } from './app-context.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FinancialService {
+  private appContext = inject(AppContextService);
   
   // Master Variable for Transactions (simulating API response)
   // Standardized with ContractService and BudgetService data
+  // Renamed to _transactions to keep raw data private
   private _transactions = signal<Transaction[]>([
     // --- Lançamentos Vinculados ao Orçamento 02/2026 (Intelliway - Contrato 087/2025) ---
     {
@@ -115,8 +118,13 @@ export class FinancialService {
     }
   ]);
 
-  // Expose signal as read-only for consumers
-  transactions = this._transactions.asReadonly();
+  // Reactive Computed Signal: Filters transactions by Global Fiscal Year
+  transactions = computed(() => {
+    const selectedYear = this.appContext.anoExercicio();
+    const allTransactions = this._transactions();
+    
+    return allTransactions.filter(t => t.date.getFullYear() === selectedYear);
+  });
 
   /**
    * Filter transactions by budget description
