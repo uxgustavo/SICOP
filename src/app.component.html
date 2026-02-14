@@ -80,17 +80,28 @@
       <div class="flex items-center gap-4">
         
         <!-- Year Selector (Context) -->
-        <div class="flex items-center gap-2 border-r border-gray-200 dark:border-gray-700 pr-4">
-          <span class="material-symbols-outlined text-gray-500">calendar_today</span>
-          <select 
-            [ngModel]="contextService.anoExercicio()" 
-            (ngModelChange)="contextService.setAno($event)"
-            class="bg-transparent border-none outline-none focus:ring-0 font-bold text-sco-blue dark:text-white cursor-pointer text-sm p-0 pr-8"
-          >
-            @for (year of contextService.availableYears; track year) {
-              <option [value]="year">{{ year }}</option>
-            }
-          </select>
+        <div class="flex items-center gap-3">
+          <!-- Minimalist Year Pill -->
+          <div class="relative flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 shadow-sm hover:border-sco-blue/30 hover:shadow transition-all group cursor-pointer">
+            <span class="material-symbols-outlined text-[18px] text-gray-400 group-hover:text-sco-blue dark:text-gray-500 transition-colors">calendar_today</span>
+            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ contextService.anoExercicio() }}</span>
+            <span class="material-symbols-outlined text-[18px] text-gray-400 group-hover:text-gray-600 dark:text-gray-500 transition-colors">keyboard_arrow_down</span>
+            
+            <!-- Invisible Overlay Select -->
+            <select 
+              [ngModel]="contextService.anoExercicio()" 
+              (ngModelChange)="contextService.setAno($event)"
+              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer appearance-none"
+              title="Selecionar Ano"
+            >
+              @for (year of contextService.availableYears; track year) {
+                <option [value]="year">{{ year }}</option>
+              }
+            </select>
+          </div>
+          
+          <!-- Separator -->
+          <div class="h-5 w-px bg-gray-200 dark:bg-gray-700"></div>
         </div>
 
         <button class="p-2 text-gray-400 hover:text-sco-blue dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative">
@@ -102,7 +113,7 @@
             <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">João Silva</span>
             <span class="text-xs text-gray-500 dark:text-gray-400 truncate">Analista ADM</span>
           </div>
-          <div class="h-9 w-9 rounded-full bg-sco-blue text-white flex items-center justify-center text-sm font-bold shadow-sm">
+          <div class="h-9 w-9 rounded-full bg-sco-blue text-white flex items-center justify-center text-sm font-bold shadow-sm ring-2 ring-white dark:ring-gray-800">
             JS
           </div>
         </div>
