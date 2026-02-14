@@ -23,6 +23,17 @@ export class FinancialPageComponent {
   // Signals
   searchQuery = signal('');
   activeTab = signal<'ALL' | 'PAYMENTS' | 'COMMITMENTS'>('ALL');
+  
+  // Advanced Filter State
+  isFilterPanelOpen = signal(false);
+  filterStartDate = signal<string>('');
+  filterEndDate = signal<string>('');
+  filterType = signal<TransactionType | ''>('');
+  filterContract = signal<string>('');
+  filterCommitment = signal<string>('');
+
+  // Expose Enum to Template
+  TransactionType = TransactionType;
 
   // Helpers for Template
   getTypeLabel = getTransactionTypeLabel;
@@ -32,23 +43,77 @@ export class FinancialPageComponent {
 
   // Logic
   filteredTransactions = computed(() => {
+    // 1. Get Base Data
+    const transactions = this.financialService.transactions();
+    
+    // 2. Get Filter Values
     const query = this.searchQuery().toLowerCase();
     const tab = this.activeTab();
-    // Obtém transações do serviço (já filtradas pelo Contexto de Ano)
-    const transactions = this.financialService.transactions();
+    const startDate = this.filterStartDate();
+    const endDate = this.filterEndDate();
+    const type = this.filterType();
+    const contract = this.filterContract().toLowerCase();
+    const commitment = this.filterCommitment().toLowerCase();
 
     return transactions.filter(t => {
       // Tab Filter
       if (tab === 'PAYMENTS' && t.type !== TransactionType.LIQUIDATION) return false;
       if (tab === 'COMMITMENTS' && t.type !== TransactionType.COMMITMENT) return false;
 
-      // Text Search
-      if (!query) return true;
-      return (
-        t.description.toLowerCase().includes(query) ||
-        t.contractId.toLowerCase().includes(query) ||
-        t.commitmentId.toLowerCase().includes(query)
-      );
+      // Advanced Filter: Type
+      if (type && t.type !== type) return false;
+
+      // Advanced Filter: Contract (ID match)
+      if (contract && !t.contractId.toLowerCase().includes(contract)) return false;
+
+      // Advanced Filter: Commitment (ID match)
+      if (commitment && !t.commitmentId.toLowerCase().includes(commitment)) return false;
+
+      // Advanced Filter: Date Range
+      if (startDate) {
+        // Create date at midnight local time to compare strictly by day
+        const start = new Date(startDate);
+        // Assuming t.date is a Date object. 
+        // We set t.date to midnight for comparison or simply compare timestamps
+        // Simple string comparison for dates YYYY-MM-DD often works if consistent, 
+        // but let's compare timestamps.
+        
+        // Fix: Adjust input date to consider timezone offset if needed, or simple comparison:
+        // Let's assume input '2025-01-01' is meant to include transactions on that day.
+        // t.date usually has time 00:00:00 if coming from mock as `new Date(y, m, d)`.
+        const tDate = new Date(t.date);
+        tDate.setHours(0,0,0,0);
+        const sDate = new Date(start);
+        sDate.setHours(0,0,0,0);
+        
+        // Need to account for timezone in input vs local creation?
+        // Let's use simple string logic for robust day comparison in local time
+        // or just ensure we compare >= start
+        if (tDate < sDate) return false;
+      }
+
+      if (endDate) {
+         const end = new Date(endDate);
+         const tDate = new Date(t.date);
+         tDate.setHours(0,0,0,0);
+         const eDate = new Date(end);
+         eDate.setHours(0,0,0,0);
+         
+         if (tDate > eDate) return false;
+      }
+
+      // Text Search (Global)
+      if (query) {
+        const matches = 
+          t.description.toLowerCase().includes(query) ||
+          t.contractId.toLowerCase().includes(query) ||
+          t.commitmentId.toLowerCase().includes(query) ||
+          t.budgetDescription.toLowerCase().includes(query);
+          
+        if (!matches) return false;
+      }
+
+      return true;
     });
   });
 
@@ -60,5 +125,18 @@ export class FinancialPageComponent {
   updateSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
+  }
+
+  toggleFilterPanel() {
+    this.isFilterPanelOpen.update(v => !v);
+  }
+
+  clearFilters() {
+    this.filterStartDate.set('');
+    this.filterEndDate.set('');
+    this.filterType.set('');
+    this.filterContract.set('');
+    this.filterCommitment.set('');
+    this.searchQuery.set('');
   }
 }

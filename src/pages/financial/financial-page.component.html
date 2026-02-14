@@ -9,7 +9,7 @@
         <p class="text-sm text-gray-500 mt-1">Histórico completo de transações e movimentações.</p>
       </div>
       
-      <!-- Tabs (Right Side) - Harmonized with Contracts Page (Segmented Control Style) -->
+      <!-- Tabs (Right Side) -->
       <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 shadow-inner self-start md:self-auto">
         <button 
           (click)="setTab('ALL')"
@@ -41,7 +41,7 @@
       </div>
     </div>
 
-    <!-- Toolbar - Harmonized (Rounded-XL and py-3) -->
+    <!-- Toolbar -->
     <div class="flex flex-col sm:flex-row gap-4">
       <div class="relative flex-1 max-w-lg">
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
@@ -54,9 +54,18 @@
         />
       </div>
       
-      <button class="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm">
+      <button 
+        (click)="toggleFilterPanel()"
+        class="flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-xl border transition-all shadow-sm"
+        [class]="isFilterPanelOpen() || filterType() || filterContract() || filterCommitment() || filterStartDate() || filterEndDate()
+          ? 'bg-blue-50 border-blue-200 text-sco-blue dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300' 
+          : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'"
+      >
         <span class="material-symbols-outlined text-[20px]">filter_list</span>
         Filtros
+        @if (filterType() || filterContract() || filterCommitment() || filterStartDate() || filterEndDate()) {
+          <span class="flex h-2 w-2 rounded-full bg-sco-blue"></span>
+        }
       </button>
 
       <div class="flex-1"></div> <!-- Spacer -->
@@ -66,6 +75,87 @@
         Exportar
       </button>
     </div>
+
+    <!-- Filter Panel -->
+    @if (isFilterPanelOpen()) {
+      <div class="p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg animate-in fade-in slide-in-from-top-4 duration-200">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-sco-blue">tune</span>
+            Filtros Avançados
+          </h3>
+          <button (click)="clearFilters()" class="text-xs text-red-500 hover:text-red-700 font-medium hover:underline">
+            Limpar Filtros
+          </button>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          
+          <!-- Date Start -->
+          <div class="space-y-1.5">
+             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">De</label>
+             <input 
+                type="date"
+                [ngModel]="filterStartDate()"
+                (ngModelChange)="filterStartDate.set($event)"
+                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-sco-blue outline-none"
+             >
+          </div>
+
+          <!-- Date End -->
+          <div class="space-y-1.5">
+             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Até</label>
+             <input 
+                type="date" 
+                [ngModel]="filterEndDate()"
+                (ngModelChange)="filterEndDate.set($event)"
+                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-sco-blue outline-none"
+             >
+          </div>
+
+          <!-- Type -->
+          <div class="space-y-1.5">
+             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo</label>
+             <select 
+                [ngModel]="filterType()"
+                (ngModelChange)="filterType.set($event)"
+                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-sco-blue outline-none"
+             >
+                <option value="">Todos</option>
+                <option [value]="TransactionType.LIQUIDATION">Pagamento (Liquidado)</option>
+                <option [value]="TransactionType.COMMITMENT">Empenho</option>
+                <option [value]="TransactionType.REINFORCEMENT">Reforço</option>
+                <option [value]="TransactionType.CANCELLATION">Cancelamento</option>
+             </select>
+          </div>
+
+          <!-- Contract -->
+          <div class="space-y-1.5">
+             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contrato</label>
+             <input 
+                type="text" 
+                [ngModel]="filterContract()"
+                (ngModelChange)="filterContract.set($event)"
+                placeholder="Ex: 124/2024"
+                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-sco-blue outline-none"
+             >
+          </div>
+
+          <!-- Commitment Note -->
+          <div class="space-y-1.5">
+             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Nota de Empenho</label>
+             <input 
+                type="text" 
+                [ngModel]="filterCommitment()"
+                (ngModelChange)="filterCommitment.set($event)"
+                placeholder="Ex: 2025NE..."
+                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-sco-blue outline-none"
+             >
+          </div>
+
+        </div>
+      </div>
+    }
   </div>
 
   <!-- Data Grid -->
