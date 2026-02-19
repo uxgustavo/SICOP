@@ -4,14 +4,53 @@ export enum ContractStatus {
   FINALIZANDO = 'FINALIZANDO'
 }
 
+export type TipoAditivo = 'PRAZO' | 'VALOR' | 'AMBOS';
+
+export interface Aditivo {
+  id: string;
+  contratoId: string;
+  tipo: TipoAditivo;
+  acrescimoValor: number;
+  novaDataFim?: Date;
+}
+
+export type TipoTransacao = 'EMPENHO' | 'PAGAMENTO' | 'CANCELAMENTO';
+
+export interface TransacaoFinanceira {
+  id: string;
+  contratoId: string;
+  tipo: TipoTransacao;
+  valor: number;
+  dataTransacao: Date;
+  dotacaoCodigo: string;
+}
+
 export interface Contract {
   id: string;
-  number: string; // Ex: "124/2024"
-  supplierName: string;
+
+  // Fields from Notion Architecture Map
+  numeroContrato: string;
+  cnpjContratada?: string; // Optional as not always available in legacy data
+  nomeContratada: string;
+  dataInicio: Date;
+  dataFimOriginal: Date;
+  valorAnualOriginal: number;
   status: ContractStatus;
-  endDate: Date;
-  
-  // Financial data for future use
+
+  // Computed/Effective values (properties populated by the Adapter/Service logic)
+  valorAtualizado?: number;
+  dataFimVigente?: Date;
+
+  // Relationship data (often loaded with the contract)
+  aditivos?: Aditivo[];
+  transacoes?: TransacaoFinanceira[];
+
+  // Legacy/Compatibility fields (mapped to new fields)
+  number: string;       // Alias for numeroContrato
+  supplierName: string; // Alias for nomeContratada
+  endDate: Date;        // Alias for dataFimVigente (effective end date)
+
+  // Legacy financial fields (kept for backward compatibility, mapped to TransacaoFinanceira calculations if possible)
   valorTotal: number;
   saldoDotacao: number;
   saldoEmpenho: number;
@@ -38,24 +77,21 @@ export function calculateDaysRemaining(endDate: Date): number {
 
 /**
  * Determines the effective status based on business rules.
- * Even if status is VIGENTE, if days < 90 it might effectively be FINALIZANDO for UI purposes.
+ * Even if status is VIGENTE, if days < 120 it might effectively be FINALIZANDO for UI purposes.
  */
 export function getEffectiveStatus(contract: Contract, daysRemaining: number): ContractStatus {
   if (contract.status === ContractStatus.RESCINDIDO) {
     return ContractStatus.RESCINDIDO;
   }
-  
-  // Rule: Less than 90 days triggers "Finalizando" alert visual
-  if (daysRemaining <= 90 && daysRemaining >= 0) {
+
+  // Rule: Less than 120 days triggers "Finalizando" alert visual (as per architecture map)
+  if (daysRemaining <= 120 && daysRemaining >= 0) {
     return ContractStatus.FINALIZANDO;
   }
-  
+
   if (daysRemaining < 0) {
-     // Could be expired, but we'll stick to provided statuses. 
-     // If it's passed date and not rescinded, maybe it's still finalizing/expired.
-     // For this UI, we treat < 0 as Finalizando/Alert or keep Vigente but with negative days.
-     // Let's assume < 90 days logic covers it.
-     return ContractStatus.FINALIZANDO; 
+    // For this UI, we treat < 0 as Finalizando/Alert or keep Vigente but with negative days.
+    return ContractStatus.FINALIZANDO;
   }
 
   return ContractStatus.VIGENTE;
