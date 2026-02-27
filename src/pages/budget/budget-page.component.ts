@@ -21,7 +21,7 @@ export class BudgetPageComponent {
 
   // Search
   searchQuery = signal('');
-  
+
   // Advanced Filter State
   isFilterPanelOpen = signal(false);
   filterUnit = signal<UnidadeOrcamentaria | 'ALL'>('ALL');
@@ -51,7 +51,7 @@ export class BudgetPageComponent {
   filteredDotacoes = computed(() => {
     const all = this.budgetService.dotacoes();
     const query = this.searchQuery().toLowerCase();
-    
+
     // Filters
     const unit = this.filterUnit();
     const noBalance = this.filterNoBalance();
@@ -60,10 +60,10 @@ export class BudgetPageComponent {
     return all.filter(d => {
       const saldo = calcularSaldoDotacao(d);
       const contract = this.getContract(d.contractId);
-      const contractName = contract?.supplierName || '';
+      const contractName = contract?.contrato || '';
 
       // 1. Text Search
-      const matchesSearch = !query || 
+      const matchesSearch = !query ||
         d.descricao.toLowerCase().includes(query) ||
         contractName.toLowerCase().includes(query) ||
         d.linkSei.toLowerCase().includes(query);
@@ -98,7 +98,7 @@ export class BudgetPageComponent {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
   }
-  
+
   clearFilters() {
     this.filterUnit.set('ALL');
     this.filterNoBalance.set(false);

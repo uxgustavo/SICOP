@@ -2,11 +2,11 @@ import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FinancialService } from '../../services/financial.service';
-import { 
-  Transaction, 
-  TransactionType, 
-  getTransactionTypeLabel, 
-  getTransactionTypeColorClass, 
+import {
+  Transaction,
+  TransactionType,
+  getTransactionTypeLabel,
+  getTransactionTypeColorClass,
   getTransactionIcon,
   getTransactionIconBgClass
 } from '../../models/transaction.model';
@@ -14,7 +14,7 @@ import {
 @Component({
   selector: 'app-financial-page',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './financial-page.component.html'
 })
 export class FinancialPageComponent {
@@ -23,7 +23,7 @@ export class FinancialPageComponent {
   // Signals
   searchQuery = signal('');
   activeTab = signal<'ALL' | 'PAYMENTS' | 'COMMITMENTS'>('ALL');
-  
+
   // Advanced Filter State
   isFilterPanelOpen = signal(false);
   filterStartDate = signal<string>('');
@@ -45,7 +45,7 @@ export class FinancialPageComponent {
   filteredTransactions = computed(() => {
     // 1. Get Base Data
     const transactions = this.financialService.transactions();
-    
+
     // 2. Get Filter Values
     const query = this.searchQuery().toLowerCase();
     const tab = this.activeTab();
@@ -77,15 +77,15 @@ export class FinancialPageComponent {
         // We set t.date to midnight for comparison or simply compare timestamps
         // Simple string comparison for dates YYYY-MM-DD often works if consistent, 
         // but let's compare timestamps.
-        
+
         // Fix: Adjust input date to consider timezone offset if needed, or simple comparison:
         // Let's assume input '2025-01-01' is meant to include transactions on that day.
         // t.date usually has time 00:00:00 if coming from mock as `new Date(y, m, d)`.
         const tDate = new Date(t.date);
-        tDate.setHours(0,0,0,0);
+        tDate.setHours(0, 0, 0, 0);
         const sDate = new Date(start);
-        sDate.setHours(0,0,0,0);
-        
+        sDate.setHours(0, 0, 0, 0);
+
         // Need to account for timezone in input vs local creation?
         // Let's use simple string logic for robust day comparison in local time
         // or just ensure we compare >= start
@@ -93,23 +93,23 @@ export class FinancialPageComponent {
       }
 
       if (endDate) {
-         const end = new Date(endDate);
-         const tDate = new Date(t.date);
-         tDate.setHours(0,0,0,0);
-         const eDate = new Date(end);
-         eDate.setHours(0,0,0,0);
-         
-         if (tDate > eDate) return false;
+        const end = new Date(endDate);
+        const tDate = new Date(t.date);
+        tDate.setHours(0, 0, 0, 0);
+        const eDate = new Date(end);
+        eDate.setHours(0, 0, 0, 0);
+
+        if (tDate > eDate) return false;
       }
 
       // Text Search (Global)
       if (query) {
-        const matches = 
+        const matches =
           t.description.toLowerCase().includes(query) ||
           t.contractId.toLowerCase().includes(query) ||
           t.commitmentId.toLowerCase().includes(query) ||
           t.budgetDescription.toLowerCase().includes(query);
-          
+
         if (!matches) return false;
       }
 
