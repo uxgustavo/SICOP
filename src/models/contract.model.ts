@@ -33,6 +33,7 @@ export interface Contract {
   status: ContractStatus;
   valor_anual: number;
   setor_id?: string;
+  objeto?: string;
 
   // Computed/Relationship properties
   aditivos?: Aditivo[];

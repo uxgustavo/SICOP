@@ -11,7 +11,10 @@ export class ContractService {
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
 
-  constructor(private supabaseService: SupabaseService) { }
+  constructor(private supabaseService: SupabaseService) {
+    // Automatically load contracts when service is instantiated
+    this.loadContracts();
+  }
 
   // Helper to parse strings to Date
   private parseDate(date: any): Date {
@@ -50,6 +53,7 @@ export class ContractService {
           valor_anual: this.parseNumeric(raw.valor_anual),
           status: raw.status as ContractStatus,
           setor_id: raw.setor_id,
+          objeto: raw.objeto,
 
           // Legacy fallbacks for UI
           number: raw.contrato,
