@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject, effect } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import {
   Contract, ContractStatus, Aditivo, Dotacao, Result,
   calculateDaysRemaining, getEffectiveStatus
@@ -10,21 +10,21 @@ import { AppContextService } from './app-context.service';
  * @description Serviço central de contratos do SICOP.
  *
  * Responsabilidades:
- * - Buscar contratos filtrados pelo ano de exercício (server-side via Supabase)
+ * - Buscar todos os contratos do Supabase (filtragem por exercício é client-side)
+ * - Carregar aditivos PRORROGACAO em batch para calcular `data_fim_efetiva`
  * - Mapear dados brutos em objetos `Contract` imutáveis
  * - Expor estado reativo via signals readonly
- * - Fornecer busca de aditivos e dotações por contrato
  *
  * @usageNotes
- * Os sinais `contracts`, `loading` e `error` são **somente leitura**.
- * Use `loadContracts()` para forçar um reload manual se necessário.
+ * A filtragem por ano de exercício é feita nos **componentes** via `computed`,
+ * usando sobreposição de intervalos: `(data_inicio <= fimAno) && (data_fim_efetiva >= inicioAno)`.
+ * Isso permite que um contrato vigente de 2024 a 2026 apareça em 2024, 2025 e 2026.
  */
 @Injectable({
   providedIn: 'root'
 })
 export class ContractService {
   private supabaseService = inject(SupabaseService);
-  private appContext = inject(AppContextService);
 
   // ── Estado Interno (privado e mutável) ──────────────────────────────────
 
@@ -34,7 +34,7 @@ export class ContractService {
 
   // ── Estado Público (somente leitura) ────────────────────────────────────
 
-  /** Lista de contratos do ano de exercício atual */
+  /** Lista completa de contratos (sem filtro de ano — componentes filtram) */
   readonly contracts = this._contracts.asReadonly();
 
   /** Indica se uma busca está em andamento */
@@ -44,42 +44,52 @@ export class ContractService {
   readonly error = this._error.asReadonly();
 
   constructor() {
-    /**
-     * Efeito reativo: recarrega contratos automaticamente sempre que
-     * o ano de exercício muda no AppContextService.
-     */
-    effect(() => {
-      const ano = this.appContext.anoExercicio();
-      this.loadContracts(ano);
-    });
+    // Carrega todos os contratos uma única vez na inicialização
+    this.loadContracts();
   }
 
   // ── Data Fetching ───────────────────────────────────────────────────────
 
   /**
-   * Busca contratos do Supabase filtrados pelo ano de exercício.
-   * A filtragem é feita **server-side** para reduzir payload.
+   * Busca TODOS os contratos do Supabase e calcula `data_fim_efetiva`
+   * usando aditivos de prorrogação carregados em batch.
    *
-   * @param ano - Ano de exercício para filtrar (default: ano atual do contexto)
+   * **Nota:** Não há filtro por ano no servidor. A filtragem por exercício
+   * é feita nos componentes via sobreposição de intervalos.
    */
-  async loadContracts(ano?: number): Promise<void> {
-    const anoExercicio = ano ?? this.appContext.anoExercicio();
-    const inicioAno = `${anoExercicio}-01-01`;
-    const fimAno = `${anoExercicio}-12-31`;
-
+  async loadContracts(): Promise<void> {
     this._loading.set(true);
     this._error.set(null);
 
     try {
-      const { data, error } = await this.supabaseService.client
+      // 1. Buscar todos os contratos
+      const { data: rawContracts, error: contractsError } = await this.supabaseService.client
         .from('contratos')
+        .select('*');
+
+      if (contractsError) throw contractsError;
+
+      // 2. Buscar todos os aditivos de PRORROGACAO em batch
+      const { data: rawAditivos, error: aditivosError } = await this.supabaseService.client
+        .from('aditivos')
         .select('*')
-        .gte('data_inicio', inicioAno)
-        .lte('data_inicio', fimAno);
+        .eq('tipo', 'PRORROGACAO')
+        .not('nova_vigencia', 'is', null)
+        .order('nova_vigencia', { ascending: false });
 
-      if (error) throw error;
+      // Aditivos são opcionais — erro não impede a carga de contratos
+      if (aditivosError) {
+        console.warn('Aviso: Não foi possível carregar aditivos de prorrogação:', aditivosError);
+      }
 
-      const contracts = (data || []).map((raw: any) => this.mapRawToContract(raw));
+      // 3. Construir mapa: numero_contrato → nova_vigencia mais recente
+      const prorrogacaoMap = this.buildProrrogacaoMap(rawAditivos || []);
+
+      // 4. Mapear contratos com data_fim_efetiva
+      const contracts = (rawContracts || []).map((raw: any) =>
+        this.mapRawToContract(raw, prorrogacaoMap)
+      );
+
       this._contracts.set(contracts);
     } catch (err: any) {
       console.error('Erro ao buscar contratos:', err);
@@ -156,20 +166,52 @@ export class ContractService {
   // ── Mappers Privados (Data Transformation Layer) ────────────────────────
 
   /**
-   * Converte um registro bruto do Supabase em um objeto `Contract` imutável.
-   * Centraliza tratamento de nulos, parsing de datas e cálculo de campos derivados.
+   * Constrói um mapa de numero_contrato → nova_vigencia mais recente
+   * a partir dos aditivos PRORROGACAO.
+   *
+   * Como os aditivos já vêm ordenados por nova_vigencia DESC,
+   * o primeiro de cada contrato é o mais recente.
    */
-  private mapRawToContract(raw: any): Contract {
-    const dataFim = this.parseDate(raw.data_fim);
-    const daysRemaining = calculateDaysRemaining(dataFim);
+  private buildProrrogacaoMap(rawAditivos: any[]): Map<string, Date> {
+    const map = new Map<string, Date>();
+
+    for (const raw of rawAditivos) {
+      const numContrato = raw.numero_contrato;
+      // Pega apenas o primeiro (mais recente) de cada contrato
+      if (numContrato && !map.has(numContrato)) {
+        map.set(numContrato, this.parseDate(raw.nova_vigencia));
+      }
+    }
+
+    return map;
+  }
+
+  /**
+   * Converte um registro bruto do Supabase em um objeto `Contract` imutável.
+   * Usa o mapa de prorrogações para calcular `data_fim_efetiva`.
+   *
+   * @param raw - Registro bruto do Supabase
+   * @param prorrogacaoMap - Mapa de numero_contrato → nova_vigencia mais recente
+   */
+  private mapRawToContract(raw: any, prorrogacaoMap: Map<string, Date>): Contract {
+    const dataFimOriginal = this.parseDate(raw.data_fim);
     const status = (raw.status as ContractStatus) || ContractStatus.VIGENTE;
 
-    const contract: Contract = {
+    // data_fim_efetiva: usa prorrogação se existir e for posterior à data original
+    const prorrogacao = prorrogacaoMap.get(raw.contrato);
+    const dataFimEfetiva = (prorrogacao && prorrogacao > dataFimOriginal)
+      ? prorrogacao
+      : dataFimOriginal;
+
+    const daysRemaining = calculateDaysRemaining(dataFimEfetiva);
+
+    return {
       id: raw.id,
       contrato: raw.contrato ?? '',
       contratada: raw.contratada ?? '',
       data_inicio: this.parseDate(raw.data_inicio),
-      data_fim: dataFim,
+      data_fim: dataFimOriginal,
+      data_fim_efetiva: dataFimEfetiva,
       valor_anual: this.parseNumeric(raw.valor_anual),
       status,
       setor_id: raw.setor_id ?? undefined,
@@ -177,8 +219,6 @@ export class ContractService {
       daysRemaining,
       statusEfetivo: getEffectiveStatus({ status }, daysRemaining)
     };
-
-    return contract;
   }
 
   /**

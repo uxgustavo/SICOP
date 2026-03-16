@@ -87,7 +87,18 @@ export interface Contract {
   // ── Valores computados (calculados no mapper do service) ──
 
   /**
-   * Dias restantes até `data_fim`. Negativo se vencido.
+   * Data de término efetiva, considerando aditivos de prorrogação.
+   * Se houver aditivo PRORROGACAO com `nova_vigencia`, prevalece a data
+   * mais recente. Caso contrário, é igual a `data_fim` original.
+   *
+   * Usada para:
+   * - Cálculo de `daysRemaining` e `statusEfetivo`
+   * - Filtro de sobreposição com o ano de exercício
+   */
+  data_fim_efetiva: Date;
+
+  /**
+   * Dias restantes até `data_fim_efetiva`. Negativo se vencido.
    * Calculado uma vez pelo mapper; componentes apenas consomem.
    */
   daysRemaining: number;

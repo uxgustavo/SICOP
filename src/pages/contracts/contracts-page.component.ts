@@ -6,6 +6,7 @@ import { ContractCardComponent } from '../../components/contract-card/contract-c
 import { ContractListViewComponent } from '../../components/contract-list-view/contract-list-view.component';
 import { ContractFormComponent } from '../../components/contract-form/contract-form.component';
 import { ContractService } from '../../services/contract.service';
+import { AppContextService } from '../../services/app-context.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
@@ -16,6 +17,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 })
 export class ContractsPageComponent implements OnInit, OnDestroy {
   private contractService = inject(ContractService);
+  private appContext = inject(AppContextService);
 
   // Navigation Event
   createContract = output<void>();
@@ -69,8 +71,25 @@ export class ContractsPageComponent implements OnInit, OnDestroy {
   /** Estado de loading do service */
   isLoading = computed(() => this.contractService.loading());
 
+  /**
+   * Lista filtrada de contratos.
+   *
+   * A filtragem segue esta ordem:
+   * 1. **Sobreposição de exercício**: (data_inicio <= fimAno) E (data_fim_efetiva >= inicioAno)
+   * 2. **Status/View mode**: Vigentes vs Histórico
+   * 3. **Filtros específicos**: fornecedor, número
+   * 4. **Busca global**: texto livre
+   *
+   * Reage automaticamente a mudanças em `appContext.anoExercicio()`.
+   */
   filteredContracts = computed(() => {
     const allContracts = this.contractService.contracts();
+
+    // ── 0. Datas-limite do ano de exercício selecionado ──
+    const anoSelecionado = this.appContext.anoExercicio();
+    const inicioAno = new Date(anoSelecionado, 0, 1);
+    const fimAno = new Date(anoSelecionado, 11, 31, 23, 59, 59);
+
     const globalQuery = this.searchQuery().toLowerCase().trim();
     const mode = this.viewMode();
 
@@ -82,11 +101,19 @@ export class ContractsPageComponent implements OnInit, OnDestroy {
     const hasStatusFilter = selectedStatuses.length > 0;
 
     return allContracts.filter(c => {
-      // Usar statusEfetivo e daysRemaining pré-calculados pelo mapper
+      // ── 1. Sobreposição com o ano de exercício ──
+      // Um contrato tem intersecção com o ano se:
+      //   data_inicio <= fimAno  E  data_fim_efetiva >= inicioAno
+      const contratoInicio = new Date(c.data_inicio);
+      const contratoFim = new Date(c.data_fim_efetiva);
+
+      if (contratoInicio > fimAno || contratoFim < inicioAno) {
+        return false; // Sem sobreposição — exclui
+      }
+
+      // ── 2. Status/View Logic ──
       const effectiveStatus = c.statusEfetivo;
       const days = c.daysRemaining;
-
-      // 1. Status/View Logic
       let matchesStatus = false;
 
       if (hasStatusFilter) {
@@ -102,11 +129,11 @@ export class ContractsPageComponent implements OnInit, OnDestroy {
         }
       }
 
-      // 2. Specific Field Filters (usando propriedades nativas do banco)
+      // ── 3. Specific Field Filters ──
       const matchesSupplier = !supQuery || c.contratada.toLowerCase().includes(supQuery);
       const matchesNumber = !numQuery || c.contrato.toLowerCase().includes(numQuery);
 
-      // 3. Global Search Logic
+      // ── 4. Global Search ──
       const matchesGlobalSearch = !globalQuery ||
         c.contrato.toLowerCase().includes(globalQuery) ||
         c.contratada.toLowerCase().includes(globalQuery) ||
