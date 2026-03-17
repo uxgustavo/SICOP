@@ -2,21 +2,21 @@ export type UnidadeOrcamentaria = 'FADEP' | 'DEFENSORIA';
 
 export interface Dotacao {
   id: string;
-  descricao: string; // Ex: "01/2025 - Nome"
-  linkSei: string;
-  cnpj: string; 
-  data: Date;
-  valorTotal: number;
-  valorUtilizado: number;
-  unidadeOrcamentaria: UnidadeOrcamentaria;
-  contractId: string; // Vínculo real com o contrato
+  contract_id: string;
+  dotacao: string;
+  unid_gestora: string;
+  valor_dotacao: number;
+  total_empenhado?: number;
+  total_cancelado?: number;
+  total_pago?: number;
+  saldo_disponivel?: number;
 }
 
 /**
  * Calcula o saldo disponível da dotação.
  */
 export function calcularSaldoDotacao(dotacao: Dotacao): number {
-  return dotacao.valorTotal - dotacao.valorUtilizado;
+  return dotacao.saldo_disponivel ?? Math.max(0, dotacao.valor_dotacao - (dotacao.total_empenhado || 0) + (dotacao.total_cancelado || 0));
 }
 
 /**

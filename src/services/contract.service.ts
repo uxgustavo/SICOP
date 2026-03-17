@@ -1,8 +1,8 @@
 import { Injectable, signal, inject } from '@angular/core';
 import {
-  Contract, ContractStatus, Aditivo, Dotacao, Result,
-  calculateDaysRemaining, getEffectiveStatus
+  Contract, ContractStatus, Aditivo, Result
 } from '../models/contract.model';
+import { Dotacao } from '../models/budget.model';
 import { SupabaseService } from './supabase.service';
 import { AppContextService } from './app-context.service';
 
@@ -51,43 +51,22 @@ export class ContractService {
   // ── Data Fetching ───────────────────────────────────────────────────────
 
   /**
-   * Busca TODOS os contratos do Supabase e calcula `data_fim_efetiva`
-   * usando aditivos de prorrogação carregados em batch.
-   *
-   * **Nota:** Não há filtro por ano no servidor. A filtragem por exercício
-   * é feita nos componentes via sobreposição de intervalos.
+   * Busca TODOS os contratos a partir da view vw_contratos_vigencia.
+   * A view já calcula `data_fim_efetiva`, `dias_restantes` e `status_efetivo`.
    */
   async loadContracts(): Promise<void> {
     this._loading.set(true);
     this._error.set(null);
 
     try {
-      // 1. Buscar todos os contratos
       const { data: rawContracts, error: contractsError } = await this.supabaseService.client
-        .from('contratos')
+        .from('vw_contratos_vigencia')
         .select('*');
 
       if (contractsError) throw contractsError;
 
-      // 2. Buscar todos os aditivos de PRORROGACAO em batch
-      const { data: rawAditivos, error: aditivosError } = await this.supabaseService.client
-        .from('aditivos')
-        .select('*')
-        .eq('tipo', 'PRORROGACAO')
-        .not('nova_vigencia', 'is', null)
-        .order('nova_vigencia', { ascending: false });
-
-      // Aditivos são opcionais — erro não impede a carga de contratos
-      if (aditivosError) {
-        console.warn('Aviso: Não foi possível carregar aditivos de prorrogação:', aditivosError);
-      }
-
-      // 3. Construir mapa: numero_contrato → nova_vigencia mais recente
-      const prorrogacaoMap = this.buildProrrogacaoMap(rawAditivos || []);
-
-      // 4. Mapear contratos com data_fim_efetiva
       const contracts = (rawContracts || []).map((raw: any) =>
-        this.mapRawToContract(raw, prorrogacaoMap)
+        this.mapRawToContract(raw)
       );
 
       this._contracts.set(contracts);
@@ -111,15 +90,15 @@ export class ContractService {
    * Busca aditivos de um contrato, tipados e ordenados por data de assinatura
    * (mais recente primeiro).
    *
-   * @param numeroContrato - Número do contrato (ex: "124/2024")
+   * @param contractId - ID do contrato (UUID)
    * @returns Result tipado com array de Aditivo ou mensagem de erro.
    */
-  async getAditivosPorContrato(numeroContrato: string): Promise<Result<Aditivo[]>> {
+  async getAditivosPorContractId(contractId: string): Promise<Result<Aditivo[]>> {
     try {
       const { data, error } = await this.supabaseService.client
         .from('aditivos')
         .select('*')
-        .eq('numero_contrato', numeroContrato)
+        .eq('contract_id', contractId)
         .order('data_assinatura', { ascending: false });
 
       if (error) throw error;
@@ -133,91 +112,41 @@ export class ContractService {
     }
   }
 
+
+
   /**
-   * Busca dotações de um contrato.
-   *
-   * @param numeroContrato - Número do contrato.
-   * @returns Result tipado com array de Dotacao ou mensagem de erro.
+   * Adiciona um novo aditivo ao Supabase.
    */
-  async getDotacoesPorContrato(numeroContrato: string): Promise<Result<Dotacao[]>> {
-    try {
-      const { data, error } = await this.supabaseService.client
-        .from('dotacoes')
-        .select('*')
-        .eq('numero_contrato', numeroContrato);
+  async addAditivo(aditivo: Partial<Aditivo>): Promise<void> {
+    const { error } = await this.supabaseService.client
+      .from('aditivos')
+      .insert(aditivo);
 
-      if (error) throw error;
-
-      const dotacoes: Dotacao[] = (data || []).map((raw: any) => ({
-        id: raw.id,
-        dotacao: raw.dotacao ?? '',
-        numero_contrato: raw.numero_contrato ?? '',
-        unid_gestora: raw.unid_gestora ?? '',
-        valor_dotacao: this.parseNumeric(raw.valor_dotacao)
-      }));
-
-      return { data: dotacoes, error: null };
-    } catch (err: any) {
-      console.error('Erro ao buscar dotações:', err);
-      return { data: null, error: err.message || 'Erro ao carregar dotações' };
+    if (error) {
+      console.error('Erro ao adicionar aditivo:', error);
+      throw error;
     }
   }
 
   // ── Mappers Privados (Data Transformation Layer) ────────────────────────
 
   /**
-   * Constrói um mapa de numero_contrato → nova_vigencia mais recente
-   * a partir dos aditivos PRORROGACAO.
-   *
-   * Como os aditivos já vêm ordenados por nova_vigencia DESC,
-   * o primeiro de cada contrato é o mais recente.
+   * Converte um registro bruto da view vw_contratos_vigencia em um objeto `Contract`.
    */
-  private buildProrrogacaoMap(rawAditivos: any[]): Map<string, Date> {
-    const map = new Map<string, Date>();
-
-    for (const raw of rawAditivos) {
-      const numContrato = raw.numero_contrato;
-      // Pega apenas o primeiro (mais recente) de cada contrato
-      if (numContrato && !map.has(numContrato)) {
-        map.set(numContrato, this.parseDate(raw.nova_vigencia));
-      }
-    }
-
-    return map;
-  }
-
-  /**
-   * Converte um registro bruto do Supabase em um objeto `Contract` imutável.
-   * Usa o mapa de prorrogações para calcular `data_fim_efetiva`.
-   *
-   * @param raw - Registro bruto do Supabase
-   * @param prorrogacaoMap - Mapa de numero_contrato → nova_vigencia mais recente
-   */
-  private mapRawToContract(raw: any, prorrogacaoMap: Map<string, Date>): Contract {
-    const dataFimOriginal = this.parseDate(raw.data_fim);
-    const status = (raw.status as ContractStatus) || ContractStatus.VIGENTE;
-
-    // data_fim_efetiva: usa prorrogação se existir e for posterior à data original
-    const prorrogacao = prorrogacaoMap.get(raw.contrato);
-    const dataFimEfetiva = (prorrogacao && prorrogacao > dataFimOriginal)
-      ? prorrogacao
-      : dataFimOriginal;
-
-    const daysRemaining = calculateDaysRemaining(dataFimEfetiva);
-
+  private mapRawToContract(raw: any): Contract {
     return {
       id: raw.id,
       contrato: raw.contrato ?? '',
       contratada: raw.contratada ?? '',
       data_inicio: this.parseDate(raw.data_inicio),
-      data_fim: dataFimOriginal,
-      data_fim_efetiva: dataFimEfetiva,
+      data_fim: this.parseDate(raw.data_fim),
       valor_anual: this.parseNumeric(raw.valor_anual),
-      status,
+      status: (raw.status as ContractStatus) || ContractStatus.VIGENTE,
       setor_id: raw.setor_id ?? undefined,
       objeto: raw.objeto ?? undefined,
-      daysRemaining,
-      statusEfetivo: getEffectiveStatus({ status }, daysRemaining)
+      data_fim_efetiva: raw.data_fim_efetiva ? this.parseDate(raw.data_fim_efetiva) : undefined,
+      dias_restantes: raw.dias_restantes != null ? Number(raw.dias_restantes) : undefined,
+      status_efetivo: (raw.status_efetivo as ContractStatus) || undefined
     };
   }
 
@@ -227,7 +156,7 @@ export class ContractService {
   private mapRawToAditivo(raw: any): Aditivo {
     return {
       id: raw.id,
-      numero_contrato: raw.numero_contrato ?? '',
+      contract_id: raw.contract_id ?? '',
       numero_aditivo: raw.numero_aditivo ?? '',
       tipo: raw.tipo ?? 'ALTERACAO',
       data_assinatura: raw.data_assinatura ? this.parseDate(raw.data_assinatura) : undefined,

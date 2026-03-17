@@ -2,15 +2,15 @@ export type SupplierStatus = 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
 
 export interface Supplier {
   id: string;
-  name: string; // Razão Social
-  tradeName: string; // Nome Fantasia
+  razao_social: string;
+  nome_fantasia: string;
   cnpj: string;
   email: string;
-  phone: string;
+  telefone: string;
+  categoria: string;
+  endereco: string;
   status: SupplierStatus;
-  address?: string;
-  category?: string; // Ex: Tecnologia, Serviços Gerais
-  since: Date;
+  desde: Date;
 }
 
 export function getSupplierStatusLabel(status: SupplierStatus): string {

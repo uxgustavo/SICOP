@@ -117,16 +117,15 @@
     <div (click)="openDetails(item)"
       class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg hover:border-sco-blue/50 dark:hover:border-sco-blue/50 transition-all cursor-pointer flex flex-col group h-full relative overflow-hidden">
       <div class="p-6 flex flex-col h-full">
-        <!-- Header -->
         <div class="mb-4">
           <span
             class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-2 border"
-            [class]="getBadgeClass(item.unidadeOrcamentaria)">
-            {{ item.unidadeOrcamentaria }}
+            [class]="getBadgeClass(item.unid_gestora)">
+            {{ item.unid_gestora }}
           </span>
           <h3
             class="text-base font-bold text-gray-900 dark:text-white leading-tight group-hover:text-sco-blue transition-colors">
-            {{ item.descricao }}
+            {{ item.dotacao }}
           </h3>
         </div>
 
@@ -136,7 +135,7 @@
           <div class="flex flex-col">
             <span class="text-xs text-gray-400 font-semibold uppercase">Contrato</span>
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300 font-mono">
-              {{ getContract(item.contractId)?.contrato || '---' }}
+              {{ getContract(item.contract_id)?.contrato || '---' }}
             </span>
           </div>
 
@@ -144,8 +143,8 @@
           <div class="flex flex-col">
             <span class="text-xs text-gray-400 font-semibold uppercase">Contratada</span>
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300 line-clamp-1"
-              [title]="getContract(item.contractId)?.contratada">
-              {{ getContract(item.contractId)?.contratada || '---' }}
+              [title]="getContract(item.contract_id)?.contratada">
+              {{ getContract(item.contract_id)?.contratada || '---' }}
             </span>
           </div>
 
@@ -160,7 +159,7 @@
           <div>
             <span class="text-xs text-gray-400 block mb-0.5">Valor Total</span>
             <span class="text-sm font-bold text-gray-900 dark:text-white">
-              {{ item.valorTotal | currency:'BRL':'symbol':'1.2-2' }}
+              {{ item.valor_dotacao | currency:'BRL':'symbol':'1.2-2' }}
             </span>
           </div>
           <div class="text-right">
@@ -203,28 +202,28 @@
           @for (item of filteredDotacoes(); track item.id) {
           <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
             <td class="px-6 py-4 whitespace-nowrap">
-              <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.descricao }}</span>
+              <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.dotacao }}</span>
             </td>
             <!-- Contrato Column -->
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">
-                {{ getContract(item.contractId)?.contrato }}
+                {{ getContract(item.contract_id)?.contrato }}
               </span>
             </td>
             <!-- Contratada Column (New) -->
             <td class="px-6 py-4">
               <span class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 max-w-[200px]"
-                [title]="getContract(item.contractId)?.contratada">
-                {{ getContract(item.contractId)?.contratada }}
+                [title]="getContract(item.contract_id)?.contratada">
+                {{ getContract(item.contract_id)?.contratada }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <span class="text-sm font-mono text-gray-600 dark:text-gray-400">{{ item.cnpj }}</span>
+              <span class="text-sm font-mono text-gray-600 dark:text-gray-400">---</span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border shadow-sm"
-                [class]="getBadgeClass(item.unidadeOrcamentaria)">
-                {{ item.unidadeOrcamentaria }}
+                [class]="getBadgeClass(item.unid_gestora)">
+                {{ item.unid_gestora }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -277,7 +276,7 @@
           <h2 class="text-lg font-bold text-gray-900 dark:text-white tracking-tight">Detalhes da Dotação</h2>
           <p class="text-sm text-gray-500 font-mono mt-0.5 flex items-center gap-2">
             <span class="material-symbols-outlined text-[16px]">folder_open</span>
-            {{ selectedBudget()?.linkSei }}
+            {{ selectedBudget()?.dotacao }}
           </p>
         </div>
         <button (click)="closeDetails()"
@@ -300,11 +299,11 @@
             </div>
             <div class="flex-1 pt-0.5">
               <h3 class="font-bold text-gray-900 dark:text-white text-base leading-snug mb-0.5">{{
-                selectedBudget()?.descricao }}</h3>
+                selectedBudget()?.dotacao }}</h3>
               <span
                 class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm"
-                [class]="getBadgeClass(selectedBudget()!.unidadeOrcamentaria)">
-                {{ selectedBudget()?.unidadeOrcamentaria }}
+                [class]="getBadgeClass(selectedBudget()!.unid_gestora)">
+                {{ selectedBudget()?.unid_gestora }}
               </span>
             </div>
           </div>
@@ -314,17 +313,17 @@
 
             <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Contrato</span>
             <span class="text-sm font-medium text-gray-900 dark:text-white">
-              {{ getContract(selectedBudget()!.contractId)?.contrato }}
+              {{ getContract(selectedBudget()!.contract_id)?.contrato }}
             </span>
 
             <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Fornecedor</span>
             <span class="text-sm font-medium text-gray-900 dark:text-white leading-tight truncate">
-              {{ getContract(selectedBudget()!.contractId)?.contratada }}
+              {{ getContract(selectedBudget()!.contract_id)?.contratada }}
             </span>
 
             <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">CNPJ</span>
             <span class="text-sm font-medium text-gray-900 dark:text-white">
-              {{ selectedBudget()?.cnpj }}
+              ---
             </span>
 
           </div>
@@ -336,13 +335,13 @@
             <div>
               <span class="text-xs text-gray-500 uppercase font-bold tracking-wide block mb-1">Total Aprovado</span>
               <p class="text-lg font-bold text-gray-900 dark:text-white">
-                {{ selectedBudget()?.valorTotal | currency:'BRL':'symbol':'1.2-2' }}
+                {{ selectedBudget()?.valor_dotacao | currency:'BRL':'symbol':'1.2-2' }}
               </p>
             </div>
             <div>
-              <span class="text-xs text-gray-500 uppercase font-bold tracking-wide block mb-1">Valor Utilizado</span>
+              <span class="text-xs text-gray-500 uppercase font-bold tracking-wide block mb-1">Empenhado</span>
               <p class="text-lg font-bold text-gray-600 dark:text-gray-400">
-                {{ selectedBudget()?.valorUtilizado | currency:'BRL':'symbol':'1.2-2' }}
+                {{ selectedBudget()?.total_empenhado | currency:'BRL':'symbol':'1.2-2' }}
               </p>
             </div>
             <div class="col-span-2 pt-2">
@@ -355,8 +354,8 @@
               <!-- Progress Bar -->
               <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                 <div class="h-2 rounded-full transition-all duration-500"
-                  [class]="((selectedBudget()?.valorUtilizado || 0) / (selectedBudget()?.valorTotal || 1)) > 0.8 ? 'bg-red-500' : 'bg-green-500'"
-                  [style.width.%]="(calcSaldo(selectedBudget()!) / (selectedBudget()?.valorTotal || 1)) * 100"></div>
+                  [class]="((selectedBudget()?.total_empenhado || 0) / (selectedBudget()?.valor_dotacao || 1)) > 0.8 ? 'bg-red-500' : 'bg-green-500'"
+                  [style.width.%]="(calcSaldo(selectedBudget()!) / (selectedBudget()?.valor_dotacao || 1)) * 100"></div>
               </div>
             </div>
           </div>
@@ -400,7 +399,7 @@
                 <div class="flex items-center gap-1.5">
                   <span class="material-symbols-outlined text-[14px] text-gray-300">tag</span>
                   <span class="text-xs text-gray-500 font-mono">
-                    {{ transaction.commitmentId }}
+                    {{ transaction.commitment_id }}
                   </span>
                 </div>
                 <span class="text-sm font-bold text-gray-900 dark:text-white">

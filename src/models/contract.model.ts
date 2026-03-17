@@ -31,7 +31,7 @@ export type TipoAditivo = 'ALTERACAO' | 'PRORROGACAO';
 
 export interface Aditivo {
   id?: string;
-  numero_contrato: string;
+  contract_id: string;
   numero_aditivo: string;
   tipo: TipoAditivo;
   data_assinatura?: Date;
@@ -39,79 +39,21 @@ export interface Aditivo {
   valor_aditivo?: number;
 }
 
-export interface Dotacao {
-  id?: string;
-  dotacao: string;
-  numero_contrato: string;
-  unid_gestora: string;
-  valor_dotacao: number;
-}
 
-/**
- * Interface principal de Contrato.
- * Os nomes das propriedades correspondem **exatamente** às colunas da tabela
- * `contratos` no Supabase, exceto pelos campos computados listados abaixo.
- */
+
 export interface Contract {
-  id?: string;
-
-  /** Número do contrato (ex: "124/2024") */
+  id: string;
   contrato: string;
-
-  /** Nome/Razão social da contratada */
   contratada: string;
-
-  /** Data de início da vigência */
   data_inicio: Date;
-
-  /** Data de término da vigência (pode ser alterada por aditivo de prorrogação) */
   data_fim: Date;
-
-  /** Status registrado no banco */
-  status: ContractStatus;
-
-  /** Valor anual do contrato */
   valor_anual: number;
-
-  /** ID do setor responsável */
-  setor_id?: string;
-
-  /** Objeto/descrição do contrato */
-  objeto?: string;
-
-  // ── Relacionamentos (carregados sob demanda) ──
-
-  aditivos?: Aditivo[];
-  dotacoes?: Dotacao[];
-
-  // ── Valores computados (calculados no mapper do service) ──
-
-  /**
-   * Data de término efetiva, considerando aditivos de prorrogação.
-   * Se houver aditivo PRORROGACAO com `nova_vigencia`, prevalece a data
-   * mais recente. Caso contrário, é igual a `data_fim` original.
-   *
-   * Usada para:
-   * - Cálculo de `daysRemaining` e `statusEfetivo`
-   * - Filtro de sobreposição com o ano de exercício
-   */
-  data_fim_efetiva: Date;
-
-  /**
-   * Dias restantes até `data_fim_efetiva`. Negativo se vencido.
-   * Calculado uma vez pelo mapper; componentes apenas consomem.
-   */
-  daysRemaining: number;
-
-  /**
-   * Status efetivo determinado por regras de negócio:
-   * - RESCINDIDO se o status no banco for RESCINDIDO
-   * - FINALIZANDO se restam ≤ 90 dias de vigência
-   * - VIGENTE nos demais casos
-   *
-   * @see getEffectiveStatus
-   */
-  statusEfetivo: ContractStatus;
+  status: ContractStatus;
+  setor_id: string;
+  objeto: string;
+  data_fim_efetiva?: Date;
+  dias_restantes?: number;
+  status_efetivo?: ContractStatus;
 }
 
 // ─── Funções Utilitárias ─────────────────────────────────────────────────────

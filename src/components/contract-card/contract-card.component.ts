@@ -15,10 +15,10 @@ export class ContractCardComponent {
   select = output<void>();
 
   /** Usa daysRemaining pré-calculado pelo mapper do service */
-  daysRemaining = computed(() => this.contract().daysRemaining);
+  daysRemaining = computed(() => this.contract().dias_restantes ?? 0);
 
   /** Usa statusEfetivo pré-calculado pelo mapper do service */
-  effectiveStatus = computed(() => this.contract().statusEfetivo);
+  effectiveStatus = computed(() => this.contract().status_efetivo);
 
   // UI Helpers based on status
 

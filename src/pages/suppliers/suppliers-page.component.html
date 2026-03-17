@@ -8,7 +8,10 @@
         <p class="text-sm text-gray-500 mt-1">Gestão de empresas contratadas e parceiros.</p>
       </div>
 
-      <!-- Layout Toggle Removed from here -->
+      <button (click)="openCreate()" class="bg-sco-blue hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-lg flex items-center gap-2 transition-colors shadow-sm text-sm">
+        <span class="material-symbols-outlined text-[20px]">add</span>
+        Novo Fornecedor
+      </button>
     </div>
 
     <!-- Toolbar: Search & Filters -->
@@ -73,7 +76,7 @@
           <!-- Avatar / Initials -->
           <div
             class="h-12 w-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300">
-            {{ supplier.tradeName.substring(0, 2).toUpperCase() }}
+            {{ supplier.nome_fantasia?.substring(0, 2).toUpperCase() || supplier.razao_social.substring(0, 2).toUpperCase() }}
           </div>
           <!-- Status Badge -->
           <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border"
@@ -84,9 +87,9 @@
 
         <h3
           class="text-base font-bold text-gray-900 dark:text-white leading-tight mb-1 group-hover:text-sco-blue transition-colors">
-          {{ supplier.tradeName }}
+          {{ supplier.nome_fantasia || supplier.razao_social }}
         </h3>
-        <p class="text-xs text-gray-500 line-clamp-1 mb-4">{{ supplier.name }}</p>
+        <p class="text-xs text-gray-500 line-clamp-1 mb-4">{{ supplier.razao_social }}</p>
 
         <div class="space-y-2 mb-4">
           <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -95,14 +98,14 @@
           </div>
           <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <span class="material-symbols-outlined text-[16px]">category</span>
-            <span>{{ supplier.category || 'Não categorizado' }}</span>
+            <span>{{ supplier.categoria || 'Não categorizado' }}</span>
           </div>
         </div>
       </div>
 
       <div
         class="mt-auto px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
-        <span class="text-xs text-gray-500">Cadastrado em {{ supplier.since | date:'yyyy' }}</span>
+        <span class="text-xs text-gray-500">Cadastrado em {{ supplier.desde | date:'yyyy' }}</span>
         <button class="text-sco-blue text-sm font-medium hover:underline">Ver Perfil</button>
       </div>
     </div>
@@ -132,11 +135,11 @@
               <div class="flex items-center gap-3">
                 <div
                   class="h-8 w-8 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
-                  {{ supplier.tradeName.substring(0, 1).toUpperCase() }}
+                  {{ supplier.nome_fantasia?.substring(0, 1).toUpperCase() || supplier.razao_social.substring(0, 1).toUpperCase() }}
                 </div>
                 <div>
-                  <div class="text-sm font-bold text-gray-900 dark:text-white">{{ supplier.tradeName }}</div>
-                  <div class="text-xs text-gray-500">{{ supplier.name }}</div>
+                  <div class="text-sm font-bold text-gray-900 dark:text-white">{{ supplier.nome_fantasia || supplier.razao_social }}</div>
+                  <div class="text-xs text-gray-500">{{ supplier.razao_social }}</div>
                 </div>
               </div>
             </td>
@@ -145,10 +148,10 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm text-gray-600 dark:text-gray-300">{{ supplier.email }}</div>
-              <div class="text-xs text-gray-400">{{ supplier.phone }}</div>
+              <div class="text-xs text-gray-400">{{ supplier.telefone }}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <span class="text-sm text-gray-600 dark:text-gray-400">{{ supplier.category || '-' }}</span>
+              <span class="text-sm text-gray-600 dark:text-gray-400">{{ supplier.categoria || '-' }}</span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center">
               <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border"
@@ -180,7 +183,7 @@
   }
 
   <!-- Drawer (Profile & Edit) -->
-  @if (selectedSupplier()) {
+  @if (selectedSupplier() || isCreating()) {
   <div class="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
 
     <!-- Backdrop -->
@@ -195,10 +198,10 @@
       <div
         class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-card-dark flex items-center justify-between shrink-0">
         <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-          {{ isEditing() ? 'Editar Fornecedor' : 'Perfil do Fornecedor' }}
+          {{ isCreating() ? 'Novo Fornecedor' : (isEditing() ? 'Editar Fornecedor' : 'Perfil do Fornecedor') }}
         </h2>
         <div class="flex items-center gap-2">
-          @if (!isEditing()) {
+          @if (!isEditing() && !isCreating()) {
           <button (click)="toggleEditMode()"
             class="p-2 text-sco-blue hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
             title="Editar">
@@ -213,70 +216,24 @@
       </div>
 
       <!-- Panel Content -->
+      @if (isEditing() || isCreating()) {
+        <app-supplier-form 
+          class="flex-1 overflow-hidden flex flex-col"
+          [supplier]="isEditing() ? selectedSupplier() : null"
+          (save)="saveChanges($event)"
+          (cancel)="isCreating() ? closeDetails() : toggleEditMode()"
+        ></app-supplier-form>
+      } @else {
       <div class="flex-1 overflow-y-auto p-6">
 
-        @if (isEditing()) {
-        <!-- EDIT FORM -->
-        <form [formGroup]="supplierForm" (ngSubmit)="saveChanges()" class="space-y-5">
-
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Razão Social</label>
-            <input formControlName="name" type="text"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome Fantasia</label>
-            <input formControlName="tradeName" type="text"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">CNPJ</label>
-            <input formControlName="cnpj" type="text"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600">
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
-              <input formControlName="email" type="email"
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Telefone</label>
-              <input formControlName="phone" type="text"
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Categoria</label>
-            <input formControlName="category" type="text"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
-            <select formControlName="status"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600">
-              <option value="ACTIVE">Ativo</option>
-              <option value="INACTIVE">Inativo</option>
-              <option value="BLOCKED">Bloqueado</option>
-            </select>
-          </div>
-
-        </form>
-
-        } @else {
         <!-- VIEW PROFILE -->
         <div class="text-center mb-6">
           <div
             class="h-20 w-20 mx-auto rounded-full bg-sco-blue/10 flex items-center justify-center text-2xl font-bold text-sco-blue mb-3">
-            {{ selectedSupplier()?.tradeName?.substring(0, 2)?.toUpperCase() }}
+            {{ selectedSupplier()?.nome_fantasia?.substring(0, 2)?.toUpperCase() || selectedSupplier()?.razao_social?.substring(0, 2)?.toUpperCase() }}
           </div>
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedSupplier()?.tradeName }}</h3>
-          <p class="text-sm text-gray-500">{{ selectedSupplier()?.name }}</p>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedSupplier()?.nome_fantasia || selectedSupplier()?.razao_social }}</h3>
+          <p class="text-sm text-gray-500">{{ selectedSupplier()?.razao_social }}</p>
           <div class="mt-2">
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border"
               [class]="getStatusClass(selectedSupplier()!.status)">
@@ -295,7 +252,7 @@
             </div>
             <div class="flex items-center gap-3">
               <span class="material-symbols-outlined text-gray-400 text-[20px]">call</span>
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ selectedSupplier()?.phone }}</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">{{ selectedSupplier()?.telefone }}</span>
             </div>
             <div class="flex items-center gap-3">
               <span class="material-symbols-outlined text-gray-400 text-[20px]">badge</span>
@@ -333,23 +290,8 @@
           </div>
           }
         </div>
-        }
-      </div>
-
-      <!-- Footer Actions (Only in Edit Mode) -->
-      @if (isEditing()) {
-      <div class="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex gap-3">
-        <button (click)="toggleEditMode()"
-          class="flex-1 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-          Cancelar
-        </button>
-        <button (click)="saveChanges()"
-          class="flex-1 py-2 text-sm font-medium text-white bg-sco-blue hover:bg-blue-700 rounded-lg">
-          Salvar
-        </button>
       </div>
       }
-
     </div>
   </div>
   }

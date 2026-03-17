@@ -7,14 +7,14 @@ export enum TransactionType {
 
 export interface Transaction {
   id: string;
+  contract_id: string;
   description: string;
-  contractId: string;
-  commitmentId: string; // ID do Empenho (ex: 2025NE000195)
+  commitment_id: string;
   date: Date;
   type: TransactionType;
   amount: number;
   department: string;
-  budgetDescription: string; // Vínculo com a Dotação Orçamentária
+  budget_description: string;
 }
 
 // Helpers for UI logic (Icons, Colors, Labels) based on Type

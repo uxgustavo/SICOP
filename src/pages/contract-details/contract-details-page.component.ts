@@ -4,19 +4,21 @@ import { ContractService } from '../../services/contract.service';
 import { BudgetService } from '../../services/budget.service';
 import { FinancialService } from '../../services/financial.service';
 import {
-  Contract, ContractStatus, Aditivo,
-  calculateDaysRemaining, getEffectiveStatus
+  Contract, ContractStatus, Aditivo
 } from '../../models/contract.model';
 import {
   getTransactionTypeLabel, getTransactionTypeColorClass,
-  getTransactionIcon, getTransactionIconBgClass
+  getTransactionIcon, getTransactionIconBgClass,
+  Transaction
 } from '../../models/transaction.model';
-import { getUnidadeBadgeClass } from '../../models/budget.model';
+import { getUnidadeBadgeClass, Dotacao } from '../../models/budget.model';
+import { AditivoFormComponent } from '../../components/aditivo-form/aditivo-form.component';
+import { DotacaoFormComponent } from '../../components/dotacao-form/dotacao-form.component';
 
 @Component({
   selector: 'app-contract-details-page',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe, DecimalPipe],
+  imports: [CommonModule, CurrencyPipe, DatePipe, DecimalPipe, AditivoFormComponent, DotacaoFormComponent],
   templateUrl: './contract-details-page.component.html',
 })
 export class ContractDetailsPageComponent {
@@ -42,6 +44,10 @@ export class ContractDetailsPageComponent {
   /** Indica se os aditivos estão sendo carregados */
   aditivosLoading = signal<boolean>(false);
 
+  // ── Modals State ────────────────────────────────────────────────────────
+  isAditivoModalOpen = signal(false);
+  isDotacaoModalOpen = signal(false);
+
   // ── Computed Contract ───────────────────────────────────────────────────
 
   contract = computed(() => {
@@ -51,14 +57,14 @@ export class ContractDetailsPageComponent {
   /** Dias restantes (usa campo pré-calculado pelo mapper) */
   daysRemaining = computed(() => {
     const c = this.contract();
-    return c ? c.daysRemaining : 0;
+    return c?.dias_restantes ?? 0;
   });
 
   /** Status efetivo para exibição (usa campo pré-calculado pelo mapper) */
   statusLabel = computed(() => {
     const c = this.contract();
     if (!c) return '---';
-    return c.statusEfetivo;
+    return c.status_efetivo;
   });
 
   statusClass = computed(() => {
@@ -100,15 +106,15 @@ export class ContractDetailsPageComponent {
 
   // ── Computed Related Data ───────────────────────────────────────────────
 
-  budgets = computed(() => {
-    return this.budgetService.getBudgetsByContractId(this.contractId());
-  });
+  // ── Budgets & Financial State ───────────────────────────────────────────
 
-  transactions = computed(() => {
-    const c = this.contract();
-    if (!c) return [];
-    return this.financialService.getTransactionsByContractNumber(c.contrato);
-  });
+  budgets = signal<Dotacao[]>([]);
+  budgetsLoading = signal<boolean>(false);
+  budgetsError = signal<string | null>(null);
+
+  transactions = signal<Transaction[]>([]);
+  transactionsLoading = signal<boolean>(false);
+  transactionsError = signal<string | null>(null);
 
   financialSummary = computed(() => {
     const trans = this.transactions();
@@ -133,25 +139,55 @@ export class ContractDetailsPageComponent {
 
   constructor() {
     /**
-     * Efeito reativo: carrega aditivos automaticamente quando o contrato
-     * é selecionado (contractId muda).
+     * Efeito reativo: carrega aditivos, orçamentos e transações
+     * automaticamente quando o contrato é selecionado.
      */
     effect(() => {
       const c = this.contract();
       if (c) {
-        this.loadAditivos(c.contrato);
+        this.loadAditivos(c.id);
+        this.loadBudgets(c.id);
+        this.loadTransactions(c.id);
       }
     });
+  }
+
+  private async loadBudgets(contractId: string): Promise<void> {
+    this.budgetsLoading.set(true);
+    this.budgetsError.set(null);
+    try {
+      const data = await this.budgetService.getBudgetsByContractId(contractId);
+      this.budgets.set(data);
+    } catch (err: any) {
+      this.budgetsError.set(err.message || 'Erro ao carregar dotações');
+      this.budgets.set([]);
+    } finally {
+      this.budgetsLoading.set(false);
+    }
+  }
+
+  private async loadTransactions(contractId: string): Promise<void> {
+    this.transactionsLoading.set(true);
+    this.transactionsError.set(null);
+    try {
+      const data = await this.financialService.getTransactionsByContractId(contractId);
+      this.transactions.set(data);
+    } catch (err: any) {
+      this.transactionsError.set(err.message || 'Erro ao carregar transações');
+      this.transactions.set([]);
+    } finally {
+      this.transactionsLoading.set(false);
+    }
   }
 
   /**
    * Carrega aditivos do contrato via service.
    */
-  private async loadAditivos(numeroContrato: string): Promise<void> {
+  private async loadAditivos(contractId: string): Promise<void> {
     this.aditivosLoading.set(true);
     this.aditivosError.set(null);
 
-    const result = await this.contractService.getAditivosPorContrato(numeroContrato);
+    const result = await this.contractService.getAditivosPorContractId(contractId);
 
     if (result.error) {
       this.aditivosError.set(result.error);
@@ -179,4 +215,32 @@ export class ContractDetailsPageComponent {
   getAditivoTipoLabel(tipo: string): string {
     return tipo === 'PRORROGACAO' ? 'Prorrogação' : 'Alteração';
   }
-}
+
+  // ── Modal Actions ───────────────────────────────────────────────────────
+
+  openAditivoModal() {
+    this.isAditivoModalOpen.set(true);
+  }
+
+  closeAditivoModal() {
+    this.isAditivoModalOpen.set(false);
+  }
+
+  onAditivoSaved(aditivo: Aditivo) {
+    this.aditivos.update(current => [aditivo, ...current]);
+    this.closeAditivoModal();
+  }
+
+  openDotacaoModal() {
+    this.isDotacaoModalOpen.set(true);
+  }
+
+  closeDotacaoModal() {
+    this.isDotacaoModalOpen.set(false);
+  }
+
+  onDotacaoSaved(dotacao: Dotacao) {
+    this.budgets.update(current => [dotacao, ...current]);
+    this.closeDotacaoModal();
+  }
+}

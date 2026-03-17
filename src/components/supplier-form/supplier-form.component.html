@@ -1,0 +1,155 @@
+<form [formGroup]="supplierForm" (ngSubmit)="onSubmit()" class="flex flex-col h-full bg-white dark:bg-card-dark rounded-lg">
+  
+  <div class="flex-1 overflow-y-auto space-y-5 p-6">
+    
+    <!-- Razão Social -->
+    <div>
+      <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Razão Social</label>
+      <input 
+        formControlName="razao_social" 
+        type="text"
+        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 transition-shadow"
+        [class.border-red-500]="f['razao_social'].invalid && f['razao_social'].touched"
+        placeholder="Digite a Razão Social da empresa"
+      >
+      @if (f['razao_social'].invalid && f['razao_social'].touched) {
+        <p class="text-xs text-red-500 mt-1 font-medium">A Razão Social é obrigatória.</p>
+      }
+    </div>
+
+    <!-- Nome Fantasia -->
+    <div>
+      <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome Fantasia</label>
+      <input 
+        formControlName="nome_fantasia" 
+        type="text"
+        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 transition-shadow"
+        [class.border-red-500]="f['nome_fantasia'].invalid && f['nome_fantasia'].touched"
+        placeholder="Nome Fantasia"
+      >
+      @if (f['nome_fantasia'].invalid && f['nome_fantasia'].touched) {
+        <p class="text-xs text-red-500 mt-1 font-medium">O Nome Fantasia é obrigatório.</p>
+      }
+    </div>
+
+    <!-- CNPJ e Data Registro -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">CNPJ</label>
+        <input 
+          formControlName="cnpj" 
+          (input)="onCnpjInput($event)"
+          type="text"
+          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 transition-shadow font-mono"
+          [class.border-red-500]="f['cnpj'].invalid && f['cnpj'].touched"
+          placeholder="00.000.000/0000-00"
+        >
+        @if (f['cnpj'].invalid && f['cnpj'].touched) {
+          <p class="text-xs text-red-500 mt-1 font-medium">Informe um CNPJ válido.</p>
+        }
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cliente Desde</label>
+        <input 
+          formControlName="desde" 
+          type="date"
+          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 transition-shadow"
+          [class.border-red-500]="f['desde'].invalid && f['desde'].touched"
+        >
+      </div>
+    </div>
+
+    <!-- Contato: Email & Telefone -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+        <input 
+          formControlName="email" 
+          type="email"
+          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 transition-shadow"
+          [class.border-red-500]="f['email'].invalid && f['email'].touched"
+          placeholder="contato@empresa.com"
+        >
+        @if (f['email'].invalid && f['email'].touched) {
+          <p class="text-xs text-red-500 mt-1 font-medium">Informe um email válido.</p>
+        }
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Telefone</label>
+        <input 
+          formControlName="telefone" 
+          (input)="onPhoneInput($event)"
+          type="text"
+          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 transition-shadow"
+          [class.border-red-500]="f['telefone'].invalid && f['telefone'].touched"
+          placeholder="(00) 0000-0000"
+        >
+        @if (f['telefone'].invalid && f['telefone'].touched) {
+          <p class="text-xs text-red-500 mt-1 font-medium">O Telefone é obrigatório.</p>
+        }
+      </div>
+    </div>
+
+    <!-- Categoria & Status -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Categoria</label>
+        <input 
+          formControlName="categoria" 
+          type="text"
+          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 transition-shadow"
+          [class.border-red-500]="f['categoria'].invalid && f['categoria'].touched"
+          placeholder="Ex: Tecnologia, Engenharia..."
+        >
+        @if (f['categoria'].invalid && f['categoria'].touched) {
+          <p class="text-xs text-red-500 mt-1 font-medium">A Categoria é obrigatória.</p>
+        }
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+        <select 
+          formControlName="status"
+          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 cursor-pointer"
+        >
+          <option value="ACTIVE">Ativo</option>
+          <option value="INACTIVE">Inativo</option>
+          <option value="BLOCKED">Bloqueado</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Endereço -->
+    <div>
+      <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Endereço Completo</label>
+      <input 
+        formControlName="endereco" 
+        type="text"
+        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 transition-shadow"
+        [class.border-red-500]="f['endereco'].invalid && f['endereco'].touched"
+        placeholder="Logradouro, Nº, Bairro, Cidade - UF"
+      >
+      @if (f['endereco'].invalid && f['endereco'].touched) {
+        <p class="text-xs text-red-500 mt-1 font-medium">O Endereço é obrigatório.</p>
+      }
+    </div>
+
+  </div>
+
+  <!-- Footer Actions -->
+  <div class="p-4 mt-auto border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex gap-3 shrink-0 rounded-b-lg">
+    <button 
+      type="button" 
+      (click)="onCancel()"
+      class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors focus:ring-2 focus:ring-gray-200 outline-none"
+    >
+      Cancelar
+    </button>
+    <button 
+      type="submit"
+      class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-sco-blue hover:bg-blue-700 rounded-lg transition-colors focus:ring-2 focus:ring-blue-300 outline-none shadow-sm flex items-center justify-center gap-2"
+    >
+      <span class="material-symbols-outlined text-[18px]">save</span>
+      Salvar
+    </button>
+  </div>
+</form>

@@ -44,7 +44,7 @@ import { Contract, ContractStatus } from '../../models/contract.model';
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
                     [class]="getStatusClass(contract)">
-                    {{ contract.statusEfetivo }}
+                    {{ contract.status_efetivo }}
                   </span>
                 </td>
 
@@ -89,7 +89,7 @@ export class ContractListViewComponent {
    * Retorna classe CSS do badge de status usando statusEfetivo pré-calculado.
    */
   getStatusClass(contract: Contract): string {
-    switch (contract.statusEfetivo) {
+    switch (contract.status_efetivo) {
       case ContractStatus.RESCINDIDO:
         return 'bg-red-50 text-red-600 border-red-100 dark:border-red-900/30 dark:bg-red-900/20';
       case ContractStatus.FINALIZANDO:
@@ -101,15 +101,17 @@ export class ContractListViewComponent {
   }
 
   getDaysLabel(contract: Contract): string {
-    if (contract.statusEfetivo === ContractStatus.RESCINDIDO) return 'Encerrado';
-    if (contract.daysRemaining < 0) return `Venceu há ${Math.abs(contract.daysRemaining)} dias`;
-    return `${contract.daysRemaining} dias restantes`;
+    const days = contract.dias_restantes ?? 0;
+    if (contract.status_efetivo === ContractStatus.RESCINDIDO) return 'Encerrado';
+    if (days < 0) return `Venceu há ${Math.abs(days)} dias`;
+    return `${days} dias restantes`;
   }
 
   getDaysClass(contract: Contract): string {
-    if (contract.statusEfetivo === ContractStatus.RESCINDIDO) return 'text-gray-400';
-    if (contract.statusEfetivo === ContractStatus.FINALIZANDO) return 'text-yellow-600 dark:text-yellow-500';
-    if (contract.daysRemaining < 0) return 'text-red-500';
+    const days = contract.dias_restantes ?? 0;
+    if (contract.status_efetivo === ContractStatus.RESCINDIDO) return 'text-gray-400';
+    if (contract.status_efetivo === ContractStatus.FINALIZANDO) return 'text-yellow-600 dark:text-yellow-500';
+    if (days < 0) return 'text-red-500';
     return 'text-green-600 dark:text-green-500';
   }
 }

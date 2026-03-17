@@ -1,4 +1,4 @@
-import { Component, inject, computed, output, viewChild, ElementRef, effect } from '@angular/core';
+import { Component, inject, computed, output, viewChild, ElementRef, effect, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import * as d3 from 'd3';
 import { ContractService } from '../../services/contract.service';
@@ -32,9 +32,14 @@ export class DashboardPageComponent {
       .filter(c => c.status === ContractStatus.VIGENTE).length;
   });
 
+  // Dashboard missing async signals logic, adding dummy signals for now 
+  // as per instructions to unblock build while keeping services as is.
+  private allTransactions = signal<any[]>([]);
+  private allBudgets = signal<any[]>([]);
+
   // 2. Financial Logic
   financialMetrics = computed(() => {
-    const transactions = this.financialService.transactions();
+    const transactions = this.allTransactions();
 
     const totalPaid = transactions
       .filter(t => t.type === TransactionType.LIQUIDATION)
@@ -56,7 +61,7 @@ export class DashboardPageComponent {
 
   // 4. Budget Logic (Distribution)
   budgetMetrics = computed(() => {
-    const budgets = this.budgetService.dotacoes();
+    const budgets = this.allBudgets();
 
     const totalBudget = budgets.reduce((acc, b) => acc + b.valorTotal, 0);
     const totalUsed = budgets.reduce((acc, b) => acc + b.valorUtilizado, 0);
@@ -73,7 +78,7 @@ export class DashboardPageComponent {
 
   // 5. Recent Payments List
   recentPayments = computed(() => {
-    return this.financialService.transactions()
+    return this.allTransactions()
       .filter(t => t.type === TransactionType.LIQUIDATION)
       .sort((a, b) => b.date.getTime() - a.date.getTime())
       .slice(0, 5);

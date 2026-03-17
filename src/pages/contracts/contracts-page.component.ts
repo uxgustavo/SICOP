@@ -112,8 +112,8 @@ export class ContractsPageComponent implements OnInit, OnDestroy {
       }
 
       // ── 2. Status/View Logic ──
-      const effectiveStatus = c.statusEfetivo;
-      const days = c.daysRemaining;
+      const effectiveStatus = c.status_efetivo;
+      const days = c.dias_restantes ?? 0;
       let matchesStatus = false;
 
       if (hasStatusFilter) {
@@ -137,7 +137,7 @@ export class ContractsPageComponent implements OnInit, OnDestroy {
       const matchesGlobalSearch = !globalQuery ||
         c.contrato.toLowerCase().includes(globalQuery) ||
         c.contratada.toLowerCase().includes(globalQuery) ||
-        effectiveStatus.toLowerCase().includes(globalQuery);
+        (effectiveStatus && effectiveStatus.toLowerCase().includes(globalQuery));
 
       return matchesStatus && matchesSupplier && matchesNumber && matchesGlobalSearch;
     });

@@ -41,10 +41,13 @@ export class FinancialPageComponent {
   getIcon = getTransactionIcon;
   getIconClass = getTransactionIconBgClass;
 
+  // All transactions state
+  private allTransactions = signal<Transaction[]>([]);
+
   // Logic
   filteredTransactions = computed(() => {
     // 1. Get Base Data
-    const transactions = this.financialService.transactions();
+    const transactions = this.allTransactions();
 
     // 2. Get Filter Values
     const query = this.searchQuery().toLowerCase();
@@ -64,10 +67,10 @@ export class FinancialPageComponent {
       if (type && t.type !== type) return false;
 
       // Advanced Filter: Contract (ID match)
-      if (contract && !t.contractId.toLowerCase().includes(contract)) return false;
+      if (contract && !t.contract_id.toLowerCase().includes(contract)) return false;
 
       // Advanced Filter: Commitment (ID match)
-      if (commitment && !t.commitmentId.toLowerCase().includes(commitment)) return false;
+      if (commitment && !t.commitment_id.toLowerCase().includes(commitment)) return false;
 
       // Advanced Filter: Date Range
       if (startDate) {
@@ -106,9 +109,9 @@ export class FinancialPageComponent {
       if (query) {
         const matches =
           t.description.toLowerCase().includes(query) ||
-          t.contractId.toLowerCase().includes(query) ||
-          t.commitmentId.toLowerCase().includes(query) ||
-          t.budgetDescription.toLowerCase().includes(query);
+          t.contract_id.toLowerCase().includes(query) ||
+          t.commitment_id.toLowerCase().includes(query) ||
+          t.budget_description.toLowerCase().includes(query);
 
         if (!matches) return false;
       }

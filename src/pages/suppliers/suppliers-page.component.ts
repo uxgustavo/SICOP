@@ -1,21 +1,21 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { SupplierService } from '../../services/supplier.service';
 import { ContractService } from '../../services/contract.service';
 import { Supplier, getSupplierStatusClass, getSupplierStatusLabel, SupplierStatus } from '../../models/supplier.model';
 import { ContractStatus } from '../../models/contract.model';
+import { SupplierFormComponent } from '../../components/supplier-form/supplier-form.component';
 
 @Component({
   selector: 'app-suppliers-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, DatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, SupplierFormComponent],
   templateUrl: './suppliers-page.component.html'
 })
 export class SuppliersPageComponent {
   private supplierService = inject(SupplierService);
   private contractService = inject(ContractService);
-  private fb = inject(FormBuilder);
 
   // Layout & State
   layoutMode = signal<'grid' | 'list'>('grid');
@@ -25,17 +25,7 @@ export class SuppliersPageComponent {
   // Drawer / Editing State
   selectedSupplier = signal<Supplier | null>(null);
   isEditing = signal(false);
-
-  // Form
-  supplierForm: FormGroup = this.fb.group({
-    name: ['', Validators.required],
-    tradeName: ['', Validators.required],
-    cnpj: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    phone: ['', Validators.required],
-    category: [''],
-    status: ['ACTIVE', Validators.required]
-  });
+  isCreating = signal(false);
 
   // Helpers
   getStatusClass = getSupplierStatusClass;
@@ -51,8 +41,8 @@ export class SuppliersPageComponent {
     return all.filter(s => {
       // 1. Search
       const matchesSearch = !query ||
-        s.name.toLowerCase().includes(query) ||
-        s.tradeName.toLowerCase().includes(query) ||
+        s.razao_social.toLowerCase().includes(query) ||
+        (s.nome_fantasia?.toLowerCase() || '').includes(query) ||
         s.cnpj.includes(query);
 
       // 2. Status
@@ -69,8 +59,8 @@ export class SuppliersPageComponent {
     if (!supplier) return [];
 
     return this.contractService.contracts().filter(c =>
-      c.contratada.toLowerCase() === supplier.name.toLowerCase() ||
-      c.contratada.toLowerCase().includes(supplier.tradeName.toLowerCase())
+      c.contratada.toLowerCase() === supplier.razao_social.toLowerCase() ||
+      c.contratada.toLowerCase().includes(supplier.nome_fantasia?.toLowerCase() || '')
     );
   });
 
@@ -91,50 +81,45 @@ export class SuppliersPageComponent {
 
   // --- Drawer / Detail Actions ---
 
+  openCreate() {
+    this.selectedSupplier.set(null);
+    this.isEditing.set(false);
+    this.isCreating.set(true);
+  }
+
   openDetails(supplier: Supplier) {
     this.selectedSupplier.set(supplier);
     this.isEditing.set(false);
+    this.isCreating.set(false);
   }
 
   closeDetails() {
     this.selectedSupplier.set(null);
     this.isEditing.set(false);
+    this.isCreating.set(false);
   }
 
   toggleEditMode() {
     const current = this.selectedSupplier();
     if (!current) return;
 
-    if (!this.isEditing()) {
-      // Enter Edit Mode: Populate Form
-      this.supplierForm.patchValue({
-        name: current.name,
-        tradeName: current.tradeName,
-        cnpj: current.cnpj,
-        email: current.email,
-        phone: current.phone,
-        category: current.category,
-        status: current.status
-      });
-      this.isEditing.set(true);
-    } else {
-      // Cancel Edit Mode
-      this.isEditing.set(false);
-    }
+    this.isEditing.set(!this.isEditing());
   }
 
-  saveChanges() {
-    if (this.supplierForm.valid && this.selectedSupplier()) {
+  saveChanges(data: Partial<Supplier>) {
+    if (this.isCreating()) {
+      // Create new supplier
+      this.supplierService.addSupplier(data as Omit<Supplier, 'id'>).then(() => {
+        this.closeDetails();
+      });
+    } else if (this.isEditing() && this.selectedSupplier()) {
+      // Update existing supplier
       const id = this.selectedSupplier()!.id;
-      const updates = this.supplierForm.value;
-
-      this.supplierService.updateSupplier(id, updates);
-
-      // Update local selected state to reflect changes immediately in UI
-      this.selectedSupplier.set({ ...this.selectedSupplier()!, ...updates });
-      this.isEditing.set(false);
-    } else {
-      this.supplierForm.markAllAsTouched();
+      this.supplierService.updateSupplier(id, data).then(() => {
+        // Update local selected state to reflect changes immediately in UI
+        this.selectedSupplier.update(current => current ? { ...current, ...data } : null);
+        this.isEditing.set(false);
+      });
     }
   }
 
