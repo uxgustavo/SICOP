@@ -135,22 +135,40 @@
           <div class="flex flex-col">
             <span class="text-xs text-gray-400 font-semibold uppercase">Contrato</span>
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300 font-mono">
-              {{ getContract(item.contract_id)?.contrato || '---' }}
+              {{ item.numero_contrato }}
             </span>
           </div>
 
-          <!-- Supplier Name Field (New) -->
+          <!-- Contratada Field -->
           <div class="flex flex-col">
             <span class="text-xs text-gray-400 font-semibold uppercase">Contratada</span>
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 line-clamp-1"
-              [title]="getContract(item.contract_id)?.contratada">
-              {{ getContract(item.contract_id)?.contratada || '---' }}
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 line-clamp-1" [title]="item.contratada">
+              {{ item.contratada }}
             </span>
           </div>
 
+          <!-- Credit Type Field -->
           <div class="flex flex-col">
-            <span class="text-xs text-gray-400 font-semibold uppercase">CNPJ</span>
-            <span class="text-sm font-mono text-gray-600 dark:text-gray-400">{{ item.cnpj }}</span>
+            <span class="text-xs text-gray-400 font-semibold uppercase">Tipo de Crédito</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ item.credito }}
+            </span>
+          </div>
+
+          <!-- Availability Date Field -->
+          <div class="flex flex-col">
+            <span class="text-xs text-gray-400 font-semibold uppercase">Data Disponibilidade</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ item.data_disponibilidade | date:'dd/MM/yyyy' }}
+            </span>
+          </div>
+
+          <!-- Unidade Gestora Field (Visual check) -->
+          <div class="flex flex-col">
+            <span class="text-xs text-gray-400 font-semibold uppercase">UG</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ item.unid_gestora }}
+            </span>
           </div>
         </div>
 
@@ -186,9 +204,9 @@
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
               Contrato</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-              Contratada</th>
+              Crédito</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-              CNPJ</th>
+              Data Disp.</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
               Unidade</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
@@ -207,18 +225,16 @@
             <!-- Contrato Column -->
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">
-                {{ getContract(item.contract_id)?.contrato }}
-              </span>
-            </td>
-            <!-- Contratada Column (New) -->
-            <td class="px-6 py-4">
-              <span class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 max-w-[200px]"
-                [title]="getContract(item.contract_id)?.contratada">
-                {{ getContract(item.contract_id)?.contratada }}
+                {{ item.numero_contrato }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <span class="text-sm font-mono text-gray-600 dark:text-gray-400">---</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">
+                {{ item.credito }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-[11px] font-medium text-gray-500">
+              {{ item.data_disponibilidade | date:'dd/MM/yyyy' }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border shadow-sm"
@@ -312,18 +328,23 @@
           <div class="grid grid-cols-[100px_1fr] gap-y-2 items-baseline mb-5">
 
             <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Contrato</span>
-            <span class="text-sm font-medium text-gray-900 dark:text-white">
-              {{ getContract(selectedBudget()!.contract_id)?.contrato }}
+            <span class="text-sm font-medium text-gray-900 dark:text-white font-mono">
+              {{ selectedBudget()?.numero_contrato }}
             </span>
 
-            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Fornecedor</span>
-            <span class="text-sm font-medium text-gray-900 dark:text-white leading-tight truncate">
-              {{ getContract(selectedBudget()!.contract_id)?.contratada }}
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Contratada</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white leading-tight truncate" [title]="selectedBudget()?.contratada">
+              {{ selectedBudget()?.contratada }}
             </span>
 
-            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">CNPJ</span>
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Crédito</span>
             <span class="text-sm font-medium text-gray-900 dark:text-white">
-              ---
+              {{ selectedBudget()?.credito }}
+            </span>
+
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Data Disp.</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">
+              {{ selectedBudget()?.data_disponibilidade | date:'dd/MM/yyyy' }}
             </span>
 
           </div>

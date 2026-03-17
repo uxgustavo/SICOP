@@ -36,13 +36,40 @@
           class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 cursor-pointer"
         >
           <option value="" disabled selected>Selecione a UG</option>
-          <option value="UG Administração">UG Administração</option>
-          <option value="UG Saúde">UG Saúde</option>
-          <option value="UG Educação">UG Educação</option>
-          <!-- Additional options as needed -->
+          <option value="DEFENSORIA">DEFENSORIA</option>
+          <option value="FADEP">FADEP</option>
         </select>
         @if (f['unid_gestora'].invalid && f['unid_gestora'].touched) {
           <p class="text-xs text-red-500 mt-1 font-medium">Selecione uma UG.</p>
+        }
+      </div>
+    </div>
+
+    <!-- Crédito e Data -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de Crédito</label>
+        <input 
+          formControlName="credito" 
+          type="text"
+          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 transition-shadow"
+          [class.border-red-500]="f['credito'].invalid && f['credito'].touched"
+          placeholder="Ex: Inicial, Suplementar..."
+        >
+        @if (f['credito'].invalid && f['credito'].touched) {
+          <p class="text-xs text-red-500 mt-1 font-medium">Obrigatório.</p>
+        }
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Disponibilidade</label>
+        <input 
+          formControlName="data_disponibilidade" 
+          type="date"
+          class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sco-blue outline-none dark:bg-gray-800 dark:border-gray-600 transition-shadow"
+          [class.border-red-500]="f['data_disponibilidade'].invalid && f['data_disponibilidade'].touched"
+        >
+        @if (f['data_disponibilidade'].invalid && f['data_disponibilidade'].touched) {
+          <p class="text-xs text-red-500 mt-1 font-medium">Obrigatório.</p>
         }
       </div>
     </div>

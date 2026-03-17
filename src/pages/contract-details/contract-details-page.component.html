@@ -374,7 +374,7 @@
                               </span>
                               <span class="text-xs font-mono text-gray-500">{{ budget.dotacao }}</span>
                            </div>
-                           <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-4">{{ budget.descricao }}</h4>
+                           <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-4">{{ budget.credito }}</h4>
                            
                            <div class="flex justify-between text-sm mb-1">
                               <span class="text-gray-500">Valor Total</span>
@@ -481,6 +481,7 @@
       <div class="relative w-full max-w-lg z-10 animate-in zoom-in-95 duration-200">
          <app-dotacao-form
             [contractId]="contractId()"
+            [numeroContrato]="c.contrato"
             (save)="onDotacaoSaved($event)"
             (cancel)="closeDotacaoModal()"
          ></app-dotacao-form>

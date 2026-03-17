@@ -15,6 +15,7 @@ export class DotacaoFormComponent {
 
   // Inputs & Outputs
   contractId = input.required<string>();
+  numeroContrato = input.required<string>();
   save = output<any>();
   cancel = output<void>();
 
@@ -23,6 +24,8 @@ export class DotacaoFormComponent {
   constructor() {
     this.dotacaoForm = this.fb.group({
       dotacao: ['', Validators.required],
+      credito: ['', Validators.required],
+      data_disponibilidade: ['', Validators.required],
       unid_gestora: ['', Validators.required],
       valor_dotacao: [0, [Validators.required, Validators.min(0.01)]]
     });
@@ -35,6 +38,7 @@ export class DotacaoFormComponent {
       const formData = this.dotacaoForm.value;
       const dotacaoToSave = {
         contract_id: this.contractId(),
+        numero_contrato: this.numeroContrato(),
         ...formData
       };
       

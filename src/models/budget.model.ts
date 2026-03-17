@@ -3,13 +3,27 @@ export type UnidadeOrcamentaria = 'FADEP' | 'DEFENSORIA';
 export interface Dotacao {
   id: string;
   contract_id: string;
+  numero_contrato: string;
+  contratada: string;
   dotacao: string;
+  credito: string;
+  data_disponibilidade: Date;
   unid_gestora: string;
   valor_dotacao: number;
   total_empenhado?: number;
   total_cancelado?: number;
   total_pago?: number;
   saldo_disponivel?: number;
+}
+
+export interface DotacaoPayload {
+  contract_id: string;
+  numero_contrato: string;
+  dotacao: string;
+  credito: string;
+  data_disponibilidade: string; // ISO format for DB
+  unid_gestora: string;
+  valor_dotacao: number;
 }
 
 /**

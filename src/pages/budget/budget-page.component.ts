@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BudgetService } from '../../services/budget.service';
@@ -28,9 +28,6 @@ export class BudgetPageComponent {
   filterNoBalance = signal<boolean>(false);
   filterMinBalance = signal<number | null>(null);
 
-  // All budgets state
-  private allBudgets = signal<Dotacao[]>([]);
-
   // Selection State (Side Panel)
   selectedBudget = signal<Dotacao | null>(null);
   selectedBudgetHistory = signal<Transaction[]>([]);
@@ -39,32 +36,13 @@ export class BudgetPageComponent {
   calcSaldo = calcularSaldoDotacao;
   getBadgeClass = getUnidadeBadgeClass;
 
-  // Transaction Helpers
-  getTypeLabel = getTransactionTypeLabel;
-  getTypeClass = getTransactionTypeColorClass;
-  getIcon = getTransactionIcon;
-  getIconClass = getTransactionIconBgClass;
-
-  // Helper to get contract info
-  getContract(id: string) {
-    return this.contractService.getContractById(id);
+  ngOnInit() {
+    this.budgetService.loadDotacoes();
   }
 
-  // Load all budgets on init (assuming we need to show all by default)
-  // We don't have a getBudgets() method that loads *all* budgets without a contractId yet.
-  // Wait, BudgetService no longer has a synchronous `dotacoes()` signal with all budgets. 
-  // We need to either load them by contract, or the user is looking at a global list.
-  // Let's add a global budget fetching signal or method if needed, OR 
-  // we assume we load budgets when a contract is selected. 
-  // Let's create an async wrapper that fetches all budgets if the service supports it, 
-  // OR we need to add a method to budget.service.ts to fetch ALL budgets.
-  
-  // For now, let's just make it compilable. We will leave `allBudgets` empty 
-  // since the user instructions said "We will fix linting issues".
-  
   // Computed Logic
   filteredDotacoes = computed(() => {
-    const all = this.allBudgets();
+    const all = this.budgetService.dotacoes();
     const query = this.searchQuery().toLowerCase();
 
     // Filters
@@ -74,8 +52,7 @@ export class BudgetPageComponent {
 
     return all.filter(d => {
       const saldo = calcularSaldoDotacao(d);
-      const contract = this.getContract(d.contract_id);
-      const contractName = contract?.contrato || '';
+      const contractName = d.numero_contrato || '';
 
       // 1. Text Search
       const matchesSearch = !query ||
