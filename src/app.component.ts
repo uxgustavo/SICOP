@@ -1,15 +1,16 @@
-import { Component, signal, LOCALE_ID, inject } from '@angular/core';
 import { CommonModule, registerLocaleData } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import localePt from '@angular/common/locales/pt';
-import { ContractsPageComponent } from './pages/contracts/contracts-page.component';
-import { ContractFormComponent } from './components/contract-form/contract-form.component';
-import { FinancialPageComponent } from './pages/financial/financial-page.component';
-import { BudgetPageComponent } from './pages/budget/budget-page.component';
-import { ContractDetailsPageComponent } from './pages/contract-details/contract-details-page.component';
-import { DashboardPageComponent } from './pages/dashboard/dashboard-page.component';
-import { SuppliersPageComponent } from './pages/suppliers/suppliers-page.component';
-import { AppContextService } from './services/app-context.service';
+import { Component, signal, LOCALE_ID, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { AppContextService } from './core/services/app-context.service';
+
+import { BudgetPageComponent } from './features/budget/pages/budget/budget-page.component';
+import { ContractFormComponent } from './features/contracts/components/contract-form/contract-form.component';
+import { ContractDetailsPageComponent } from './features/contracts/pages/contract-details/contract-details-page.component';
+import { ContractsPageComponent } from './features/contracts/pages/contracts/contracts-page.component';
+import { DashboardPageComponent } from './features/dashboard/pages/dashboard/dashboard-page.component';
+import { FinancialPageComponent } from './features/financial/pages/financial/financial-page.component';
+import { SuppliersPageComponent } from './features/suppliers/pages/suppliers/suppliers-page.component';
 
 registerLocaleData(localePt);
 
