@@ -64,17 +64,8 @@ import { environment } from '../../../../environments/environment';
             <input 
               type="text" 
               [(ngModel)]="numeroNE"
-              placeholder="Ex: 2026NE000048"
-              autocomplete="off"
-              class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400"
-            >
-          </div>
-          <div class="w-full md:w-32">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Ano</label>
-            <input 
-              type="text" 
-              [(ngModel)]="ano"
-              placeholder="2026"
+              placeholder="Ex: 2026NE000302"
+              (keyup.enter)="buscarNotaEmpenho()"
               autocomplete="off"
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400"
             >
@@ -82,7 +73,7 @@ import { environment } from '../../../../environments/environment';
           <div class="flex items-end">
             <button 
               (click)="buscarNotaEmpenho()"
-              [disabled]="sigefService.loading() || !numeroNE || !ano"
+              [disabled]="sigefService.loading() || !numeroNE"
               class="px-6 py-2.5 bg-sco-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium"
             >
               @if (sigefService.loading()) {
@@ -114,11 +105,11 @@ import { environment } from '../../../../environments/environment';
           <div class="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
             <div class="flex items-center justify-between">
               <div>
-                <h2 class="text-xl font-bold text-sco-blue dark:text-white">{{ notaEmpenho()!.nuempenho }}</h2>
+                <h2 class="text-xl font-bold text-sco-blue dark:text-white">{{ notaEmpenho()!.nunotaempenho }}</h2>
                 <p class="text-sm text-gray-500 mt-1">Nota de Empenho</p>
               </div>
               <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
-                {{ notaEmpenho()!.dssituacaoempenho }}
+                {{ notaEmpenho()!.demodalidadeempenho }}
               </span>
             </div>
           </div>
@@ -127,44 +118,94 @@ import { environment } from '../../../../environments/environment';
           <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               
+              <!-- Unidade Gestora -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Unidade Gestora</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdunidadegestora }}</p>
+              </div>
+
+              <!-- Gestão -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Gestão</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdgestao }}</p>
+              </div>
+
               <!-- Credor -->
               <div class="space-y-1">
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Credor</label>
-                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.nmcredor }}</p>
-                <p class="text-xs text-gray-500">CNPJ: {{ notaEmpenho()!.cdcredor }}</p>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Credor (CNPJ/CPF)</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdcredor }}</p>
               </div>
 
-              <!-- Data Emissão -->
+              <!-- Data de Lançamento -->
               <div class="space-y-1">
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Data de Emissão</label>
-                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.dtemissao | date:'dd/MM/yyyy' }}</p>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Data de Lançamento</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.dtlancamento | date:'dd/MM/yyyy' }}</p>
               </div>
 
-              <!-- Data Vencimento -->
+              <!-- Tipo -->
               <div class="space-y-1">
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Data de Vencimento</label>
-                <p class="text-sm font-medium text-gray-900 dark:text-white">
-                  {{ notaEmpenho()!.dtvencimento ? (notaEmpenho()!.dtvencimento | date:'dd/MM/yyyy') : 'Não definido' }}
-                </p>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Tipo</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.tipo }}</p>
+              </div>
+
+              <!-- Processo -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Processo</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.nuprocesso }}</p>
               </div>
 
               <!-- Natureza da Despesa -->
               <div class="space-y-1">
                 <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Natureza da Despesa</label>
                 <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdnaturezadespesa }}</p>
-                <p class="text-xs text-gray-500">{{ notaEmpenho()!.dsnaturezadespesa }}</p>
               </div>
 
               <!-- Fonte -->
               <div class="space-y-1">
                 <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Fonte de Recursos</label>
-                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdfonte }} - {{ notaEmpenho()!.nmfonte }}</p>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdfonte }}</p>
               </div>
 
               <!-- Ação -->
               <div class="space-y-1">
                 <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Ação</label>
-                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdacao }} - {{ notaEmpenho()!.nmacao }}</p>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdacao }}</p>
+              </div>
+
+              <!-- Função -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Função</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdfuncao }}</p>
+              </div>
+
+              <!-- Subfunção -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Subfunção</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdsubfuncao }}</p>
+              </div>
+
+              <!-- Programa -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Programa</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdprograma }}</p>
+              </div>
+
+              <!-- Modalidade de Licitação -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Modalidade de Licitação</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdmodalidadelicitacao }}</p>
+              </div>
+
+              <!-- Modalidade de Empenho -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Modalidade de Empenho</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdmodalidadeempenho }} - {{ notaEmpenho()!.demodalidadeempenho }}</p>
+              </div>
+
+              <!-- Evento -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Evento</label>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ notaEmpenho()!.cdevento }}</p>
               </div>
 
             </div>
@@ -172,89 +213,37 @@ import { environment } from '../../../../environments/environment';
             <!-- Values Section -->
             <div class="mt-8">
               <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Valores</h3>
-              <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl">
-                  <p class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase">Empenhado</p>
+                  <p class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase">Valor Nota Empenho</p>
                   <p class="text-lg font-bold text-blue-700 dark:text-blue-300 mt-1">
-                    {{ notaEmpenho()!.vlremessa | currency:'BRL':'symbol':'1.2-2' }}
+                    {{ notaEmpenho()!.vlnotaempenho | currency:'BRL':'symbol':'1.2-2' }}
                   </p>
                 </div>
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl">
-                  <p class="text-xs font-medium text-yellow-600 dark:text-yellow-400 uppercase">RAT</p>
-                  <p class="text-lg font-bold text-yellow-700 dark:text-yellow-300 mt-1">
-                    {{ notaEmpenho()!.vlrat | currency:'BRL':'symbol':'1.2-2' }}
-                  </p>
-                </div>
-                <div class="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl">
-                  <p class="text-xs font-medium text-orange-600 dark:text-orange-400 uppercase">RP não proc.</p>
-                  <p class="text-lg font-bold text-orange-700 dark:text-orange-300 mt-1">
-                    {{ notaEmpenho()!.vlrpnp | currency:'BRL':'symbol':'1.2-2' }}
-                  </p>
-                </div>
-                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl">
-                  <p class="text-xs font-medium text-green-600 dark:text-green-400 uppercase">Liquidado</p>
-                  <p class="text-lg font-bold text-green-700 dark:text-green-300 mt-1">
-                    {{ notaEmpenho()!.vlliquidado | currency:'BRL':'symbol':'1.2-2' }}
+                <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                  <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">Quantidade</p>
+                  <p class="text-lg font-bold text-gray-700 dark:text-gray-300 mt-1">
+                    {{ notaEmpenho()!.nuquantidade | number:'1.0-0' }}
                   </p>
                 </div>
                 <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl">
-                  <p class="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase">Pago</p>
+                  <p class="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase">Nota Original</p>
                   <p class="text-lg font-bold text-purple-700 dark:text-purple-300 mt-1">
-                    {{ notaEmpenho()!.vlpago | currency:'BRL':'symbol':'1.2-2' }}
+                    {{ notaEmpenho()!.nuneoriginal }}
                   </p>
                 </div>
               </div>
             </div>
 
-            <!-- Contract Link -->
-            @if (notaEmpenho()!.nucontrato) {
+            <!-- Histórico -->
+            @if (notaEmpenho()!.dehistorico) {
               <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <p class="text-sm">
-                  <span class="font-medium text-gray-600 dark:text-gray-400">Contrato:</span>
-                  <span class="ml-2 text-sco-blue font-semibold">{{ notaEmpenho()!.nucontrato }}</span>
-                </p>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Histórico</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ notaEmpenho()!.dehistorico }}</p>
               </div>
             }
-          </div>
 
-          <!-- Itens Table -->
-          @if (itens().length > 0) {
-            <div class="border-t border-gray-100 dark:border-gray-700">
-              <div class="p-6">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Itens da Nota de Empenho</h3>
-                <div class="overflow-x-auto">
-                  <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
-                    <thead class="bg-gray-50 dark:bg-gray-800/50">
-                      <tr>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Item</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Descrição</th>
-                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-400 uppercase">Qtd</th>
-                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-400 uppercase">Vl. Unit.</th>
-                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-400 uppercase">Vl. Total</th>
-                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-400 uppercase">Saldo</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                      @for (item of itens(); track item.nusequencialitem) {
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                          <td class="px-4 py-3 text-sm text-gray-500">{{ item.nusequencialitem }}</td>
-                          <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ item.dsunidadesubitem }}</td>
-                          <td class="px-4 py-3 text-sm text-gray-900 dark:text-white text-right">{{ item.qtitem | number:'1.0-0' }}</td>
-                          <td class="px-4 py-3 text-sm text-gray-900 dark:text-white text-right">{{ item.vlunitario | currency:'BRL':'symbol':'1.2-2' }}</td>
-                          <td class="px-4 py-3 text-sm text-gray-900 dark:text-white text-right font-medium">{{ item.vlglobal | currency:'BRL':'symbol':'1.2-2' }}</td>
-                          <td class="px-4 py-3 text-sm text-right">
-                            <span [class]="item.vlsaldoitem > 0 ? 'text-green-600' : 'text-red-600'">
-                              {{ item.vlsaldoitem | currency:'BRL':'symbol':'1.2-2' }}
-                            </span>
-                          </td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          }
+          </div>
         </div>
       } @else if (buscou && !sigefService.loading()) {
         <div class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center">
@@ -271,7 +260,6 @@ export class NotaEmpenhoPageComponent implements OnInit {
   sigefService = inject(SigefService);
   
   numeroNE = '';
-  ano = '2026';
   buscou = false;
   
   notaEmpenho = signal<NotaEmpenho | null>(null);
@@ -296,29 +284,38 @@ export class NotaEmpenhoPageComponent implements OnInit {
     this.debugLogs.set('');
   }
 
+  private extrairAnoDoNumeroNE(numeroNE: string): string {
+    const match = numeroNE.match(/^(\d{4})/);
+    if (match) {
+      return match[1];
+    }
+    return new Date().getFullYear().toString();
+  }
+
   async buscarNotaEmpenho() {
-    if (!this.numeroNE || !this.ano) return;
+    if (!this.numeroNE) return;
+    
+    const cleanNE = this.numeroNE.trim().toUpperCase();
+    const ano = this.extrairAnoDoNumeroNE(cleanNE);
     
     this.buscou = true;
     this.clearDebugLogs();
     
-    this.addDebugLog(`Iniciando busca: NE=${this.numeroNE}, Ano=${this.ano}`);
-    this.addDebugLog(`API URL: ${environment.sigefApiUrl}/sigef/notaempenho/?ano=${this.ano}`);
+    this.addDebugLog(`Iniciando busca: NE=${cleanNE}, Ano=${ano}`);
+    this.addDebugLog(`API URL: ${environment.sigefApiUrl}/sigef/notaempenho/?ano=${ano}`);
     
     try {
-      this.addDebugLog('Chamando getNotaEmpenho...');
-      const nota = await this.sigefService.getNotaEmpenho(this.ano);
-      this.addDebugLog(`Retornou ${nota.length} notas de empenho`);
+      this.addDebugLog('Chamando getNotaEmpenhoByNumber...');
+      const nota = await this.sigefService.getNotaEmpenhoByNumber(ano, cleanNE);
       
-      this.notaEmpenho.set(nota.find(ne => ne.nunotaempenho === this.numeroNE) || null);
-      
-      if (this.notaEmpenho()) {
-        this.addDebugLog(`NE encontrada: ${this.notaEmpenho()!.nunotaempenho}`);
-        const itensNota = await this.sigefService.getItensByNotaEmpenho(this.ano, this.numeroNE);
-        this.addDebugLog(`Itens retornados: ${itensNota.length}`);
-        this.itens.set(itensNota);
+      if (nota) {
+        this.addDebugLog(`NE encontrada: ${nota.nunotaempenho}`);
+        this.addDebugLog(`Campos: ${JSON.stringify(nota, null, 2)}`);
+        this.notaEmpenho.set(nota);
+        this.itens.set([]);
       } else {
-        this.addDebugLog('NE não encontrada na lista');
+        this.addDebugLog('NE não encontrada');
+        this.notaEmpenho.set(null);
         this.itens.set([]);
       }
     } catch (err: any) {
