@@ -4,6 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { SigefService, NotaEmpenho, NotaEmpenhoItem } from '../../../../core/services/sigef.service';
 import { environment } from '../../../../environments/environment';
 
+interface UnidadeGestora {
+  codigo: string;
+  nome: string;
+}
+
 @Component({
   selector: 'app-nota-empenho-page',
   standalone: true,
@@ -59,6 +64,21 @@ import { environment } from '../../../../environments/environment';
       <!-- Search Form -->
       <div class="bg-white dark:bg-card-dark p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
         <div class="flex flex-col md:flex-row gap-4">
+          
+          <!-- Unidade Gestora -->
+          <div class="w-full md:w-64">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Unidade Gestora</label>
+            <select 
+              [(ngModel)]="unidadeGestoraSelecionada"
+              class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all text-gray-900 dark:text-white"
+            >
+              @for (ug of unidadesGestoras; track ug.codigo) {
+                <option [value]="ug.codigo">{{ ug.codigo }} - {{ ug.nome }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Número da NE -->
           <div class="flex-1">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Número da NE</label>
             <input 
@@ -70,6 +90,7 @@ import { environment } from '../../../../environments/environment';
               class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sco-blue focus:border-sco-blue outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400"
             >
           </div>
+          
           <div class="flex items-end">
             <button 
               (click)="buscarNotaEmpenho()"
@@ -268,6 +289,13 @@ export class NotaEmpenhoPageComponent implements OnInit {
   debugMode = signal(false);
   debugLogs = signal('');
 
+  unidadeGestoraSelecionada = '080101';
+  
+  unidadesGestoras: UnidadeGestora[] = [
+    { codigo: '080101', nome: 'DPEMA' },
+    { codigo: '080901', nome: 'FADEP' }
+  ];
+
   ngOnInit() {
   }
 
@@ -297,16 +325,17 @@ export class NotaEmpenhoPageComponent implements OnInit {
     
     const cleanNE = this.numeroNE.trim().toUpperCase();
     const ano = this.extrairAnoDoNumeroNE(cleanNE);
+    const ug = this.unidadeGestoraSelecionada;
     
     this.buscou = true;
     this.clearDebugLogs();
     
-    this.addDebugLog(`Iniciando busca: NE=${cleanNE}, Ano=${ano}`);
-    this.addDebugLog(`API URL: ${environment.sigefApiUrl}/sigef/notaempenho/?ano=${ano}`);
+    this.addDebugLog(`Iniciando busca: NE=${cleanNE}, Ano=${ano}, UG=${ug}`);
+    this.addDebugLog(`API URL: ${environment.sigefApiUrl}/sigef/notaempenho/?ano=${ano}&cdunidadegestora=${ug}`);
     
     try {
       this.addDebugLog('Chamando getNotaEmpenhoByNumber...');
-      const nota = await this.sigefService.getNotaEmpenhoByNumber(ano, cleanNE);
+      const nota = await this.sigefService.getNotaEmpenhoByNumber(ano, cleanNE, ug);
       
       if (nota) {
         this.addDebugLog(`NE encontrada: ${nota.nunotaempenho}`);

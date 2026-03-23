@@ -145,7 +145,7 @@ export class SigefService {
     await this.autoAuthenticate();
   }
 
-  async getNotaEmpenho(ano: string, search?: string, page: number = 1): Promise<{ data: NotaEmpenho[], count: number, next: string | null, previous: string | null }> {
+  async getNotaEmpenho(ano: string, search?: string, page: number = 1, cdunidadegestora?: string): Promise<{ data: NotaEmpenho[], count: number, next: string | null, previous: string | null }> {
     this._loading.set(true);
     this._error.set(null);
 
@@ -157,6 +157,9 @@ export class SigefService {
       let queryParams = `ano=${ano}&page=${page}`;
       if (search) {
         queryParams += `&search=${encodeURIComponent(search)}`;
+      }
+      if (cdunidadegestora) {
+        queryParams += `&cdunidadegestora=${cdunidadegestora}`;
       }
       const fullUrl = `${url}?${queryParams}`;
       console.log('[SIGEF NE] URL:', fullUrl);
@@ -199,22 +202,26 @@ export class SigefService {
     }
   }
 
-  async getNotaEmpenhoByNumber(ano: string, numeroNE: string): Promise<NotaEmpenho | null> {
-    console.log('[SIGEF] Buscando NE:', numeroNE, 'no ano:', ano, 'Token existe:', !!this.bearerToken);
+  async getNotaEmpenhoByNumber(ano: string, numeroNE: string, cdunidadegestora?: string): Promise<NotaEmpenho | null> {
+    console.log('[SIGEF] Buscando NE:', numeroNE, 'no ano:', ano, 'UG:', cdunidadegestora, 'Token existe:', !!this.bearerToken);
     let page = 1;
     while (true) {
       console.log('[SIGEF] Verificando pagina:', page);
-      const result = await this.getNotaEmpenho(ano, undefined, page);
+      const result = await this.getNotaEmpenho(ano, undefined, page, undefined);
       console.log('[SIGEF] Resultados nesta pagina:', result.data.length, 'Total:', result.count);
       
-      const found = result.data.find(ne => ne.nunotaempenho === numeroNE);
+      const found = result.data.find(ne => 
+        ne.nunotaempenho === numeroNE && 
+        ne.cdunidadegestora === cdunidadegestora
+      );
+      
       if (found) {
-        console.log('[SIGEF] NE encontrada na pagina', page, ':', found.nunotaempenho);
+        console.log('[SIGEF] NE encontrada na pagina', page, ':', found.nunotaempenho, 'UG:', found.cdunidadegestora);
         return found;
       }
       
       if (!result.next) {
-        console.log('[SIGEF] Fim da paginacao, NE nao encontrada');
+        console.log('[SIGEF] Fim da paginacao, NE nao encontrada para UG:', cdunidadegestora);
         return null;
       }
       page++;
