@@ -1,4 +1,4 @@
-export type UnidadeOrcamentaria = 'FADEP' | 'DEFENSORIA';
+export type UnidadeOrcamentaria = '080901' | '080101';
 
 export interface Dotacao {
   id: string;
@@ -38,6 +38,20 @@ export interface NotaEmpenhoVinculada {
 }
 
 /**
+ * Retorna label amigável para a unidade gestora
+ */
+export function getUnidadeLabel(codigo: string): string {
+  switch (codigo) {
+    case '080101':
+      return 'DPEMA';
+    case '080901':
+      return 'FADEP';
+    default:
+      return codigo;
+  }
+}
+
+/**
  * Calcula o saldo disponível da dotação.
  */
 export function calcularSaldoDotacao(dotacao: Dotacao): number {
@@ -47,11 +61,11 @@ export function calcularSaldoDotacao(dotacao: Dotacao): number {
 /**
  * Retorna classes CSS para badges de unidade orçamentária
  */
-export function getUnidadeBadgeClass(unidade: UnidadeOrcamentaria): string {
+export function getUnidadeBadgeClass(unidade: string): string {
   switch (unidade) {
-    case 'FADEP':
+    case '080901':
       return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800';
-    case 'DEFENSORIA':
+    case '080101':
       return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800';
     default:
       return 'bg-gray-50 text-gray-600 border-gray-200';

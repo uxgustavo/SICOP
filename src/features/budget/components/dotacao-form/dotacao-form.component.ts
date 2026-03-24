@@ -40,8 +40,8 @@ import { Dotacao } from '../../../../shared/models/budget.model';
             <select formControlName="unid_gestora"
               class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-500 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none dark:bg-slate-700 dark:text-white">
               <option value="">Selecione a UG</option>
-              <option value="DEFENSORIA">DEFENSORIA</option>
-              <option value="FADEP">FADEP</option>
+              <option value="080101">080101 - DPEMA</option>
+              <option value="080901">080901 - FADEP</option>
             </select>
             @if (f['unid_gestora'].invalid && f['unid_gestora'].touched) {
               <p class="text-xs text-red-500 mt-1">Selecione uma UG.</p>
