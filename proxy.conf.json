@@ -1,0 +1,11 @@
+{
+  "/sigef-api": {
+    "target": "https://api.seplan.ma.gov.br",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/sigef-api": "/api/v1"
+    }
+  }
+}
