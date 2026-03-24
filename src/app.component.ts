@@ -3,6 +3,7 @@ import localePt from '@angular/common/locales/pt';
 import { Component, signal, LOCALE_ID, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AppContextService } from './core/services/app-context.service';
+import { SigefService } from './core/services/sigef.service';
 
 import { BudgetPageComponent } from './features/budget/pages/budget/budget-page.component';
 import { ContractFormComponent } from './features/contracts/components/contract-form/contract-form.component';
@@ -36,6 +37,7 @@ registerLocaleData(localePt);
 export class AppComponent {
   // Global App Context (Year Selection)
   public contextService = inject(AppContextService);
+  public sigefService = inject(SigefService);
 
   // Navigation State
   view = signal<'dashboard' | 'list' | 'form' | 'financial' | 'budget' | 'contract-details' | 'suppliers' | 'nota-empenho'>('nota-empenho');
