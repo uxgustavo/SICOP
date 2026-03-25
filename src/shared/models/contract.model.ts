@@ -49,6 +49,9 @@ export interface Contract {
   data_fim_efetiva?: Date;
   dias_restantes?: number;
   status_efetivo?: ContractStatus;
+  total_empenhado?: number;
+  total_pago?: number;
+  saldo_a_pagar?: number;
 }
 
 // ─── Funções Utilitárias ─────────────────────────────────────────────────────

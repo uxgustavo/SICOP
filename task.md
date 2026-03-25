@@ -44,6 +44,21 @@ Desenvolver um sistema web para gestão de contratos públicos que permita:
 - Tabela `aditivos` possui foreign key `tipo_id` para `tipo_aditivo`
 - O tipo do aditivo é obtido via relação `tipo_aditivo(nome)` no Supabase
 
+### Acompanhamento de Dotações e Empenho
+- Cada dotação vinculada a um contrato pode ter uma Nota de Empenho (NE) associada
+- Ao entrar na página de detalhes do contrato, o sistema busca automaticamente os valores de engajamento na API SIGEF
+- O card de dotação exibe:
+  - **Dotação**: Valor planejado da dotação
+  - **Empenhado**: Valor extraído do campo `vlnotaempenho` da API SIGEF
+  - **Saldo (D - E)**: Diferença entre dotação e engajado (pode ser negativo = vermelho)
+- Barra de progresso showing % utilizado da dotação
+- Consulta à API ocorre apenas uma vez ao entrar na página (não refaz em mudanças de estado)
+
+### KPIs de Dotação (aba Orçamentária)
+- **Total Empenhado**: Soma dos valores de engajamento das dotações do ano atual
+- **Total Pago**: Soma dos valores pagos (implementado com 0)
+- **Saldo Dotação**: Soma dos saldos (Dotação - Empenhado) das dotações do ano atual
+
 ### Formulário de Contratos
 - Campo **Fornecedor** com autocomplete (busca na tabela fornecedores)
 - Botão para cadastrar novo fornecedor via popup/modal

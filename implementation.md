@@ -127,6 +127,34 @@ const diasRestantes = Math.ceil((dataFimEfetiva - hoje) / dias);
 const statusEfetivo = diasRestantes <= 90 ? 'FINALIZANDO' : 'VIGENTE';
 ```
 
+### Acompanhamento de Dotações e Empenho
+
+O sistema busca automaticamente os valores de engajamento das dotações via API SIGEF:
+
+```typescript
+// 1. Para cada dotação com NE vinculada
+if (budget.nunotaempenho) {
+  // 2. Buscar detalhes da NE na API
+  const neDetails = await sigefService.getNotaEmpenhoByNumber(
+    currentYear,
+    budget.nunotaempenho,
+    budget.unid_gestora
+  );
+  
+  // 3. Extrair vlnotaempenho
+  const vlEmpenhado = neDetails.vlnotaempenho || 0;
+  
+  // 4. Calcular saldo = Dotação - Empenhado
+  const saldo = budget.valor_dotacao - vlEmpenhado;
+}
+```
+
+**Regras de Negócio:**
+- A consulta à API ocorre **apenas uma vez** ao entrar na página de detalhes
+- Não há re-atualização automática para evitar sobrecarga da API SIGEF
+- O saldo pode ser negativo (vermelho) indicando necessidade de reforço
+- Filtro por ano: apenas dotações do ano atual são somadas nos KPIs
+
 **Importante**: O tipo do aditivo é obtido via relação `tipo_aditivo(nome)` no Supabase.
 
 ### Abas de Contratos

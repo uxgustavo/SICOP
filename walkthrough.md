@@ -121,6 +121,17 @@ Ao cadastrar um aditivo do tipo **ADITIVO_PRAZO** ou **ADITIVO_PRAZO_VALOR** com
 - Excluir dotação
 - Vincular Nota de Empenho via API SIGEF
 
+#### Card de Dotação
+Cada card de dotação exibe:
+- **Dotação**: Valor planejado
+- **Empenhado**: Valor que está engajado (buscado na API SIGEF via `vlnotaempenho`)
+- **Saldo (D - E)**: Diferença entre dotação e engajado (verde se positivo, vermelho se negativo)
+- Barra de progresso showing % utilizado
+- Ao entrar na página, o sistema busca automaticamente o valor engajado para cada dotação com NE vinculada
+
+#### Visualização em Tabela
+A tabela de dotações também exibe colunas: Dotação | Empenhado | Saldo com cores para indicar se há necessidade de reforço
+
 ### Aba Financeiro
 - KPIs: Total Empenhado, Total Pago, Saldo a Pagar
 - Tabela de lançamentos com coluna de Nota de Empenho
