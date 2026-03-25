@@ -1,5 +1,7 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { environment } from '../../environments/environment';
+
+export type ApiStatus = 'connected' | 'disconnected' | 'refreshing' | 'error';
 
 export interface NotaEmpenho {
   ano: number | null;
@@ -49,22 +51,58 @@ export interface NotaEmpenhoItem {
 @Injectable({
   providedIn: 'root'
 })
-export class SigefService {
+export class SigefService implements OnDestroy {
   private apiUrl = environment.sigefApiUrl;
   private _loading = signal(false);
   private _error = signal<string | null>(null);
   private _authenticated = signal(false);
+  private _apiStatus = signal<ApiStatus>('disconnected');
+  private _tokenExpiresAt = signal<string | null>(null);
 
   public loading = this._loading.asReadonly();
   public error = this._error.asReadonly();
   public authenticated = this._authenticated.asReadonly();
+  public apiStatus = this._apiStatus.asReadonly();
+  public tokenExpiresAt = this._tokenExpiresAt.asReadonly();
 
   private bearerToken: string | null = null;
   private refreshToken: string | null = null;
   private tokenExpiry: number | null = null;
+  private refreshInterval: any = null;
+  private isRefreshing = false;
 
   constructor() {
     this.autoAuthenticate();
+    this.startTokenMonitor();
+  }
+
+  ngOnDestroy() {
+    this.stopTokenMonitor();
+  }
+
+  private startTokenMonitor(): void {
+    this.refreshInterval = setInterval(() => {
+      if (this.bearerToken && this.tokenExpiry) {
+        const timeLeft = this.tokenExpiry - Date.now();
+        if (timeLeft > 0 && timeLeft < 300000) {
+          this.refreshTokenIfNeeded();
+        }
+        this.updateExpiresAt();
+      }
+    }, 60000);
+  }
+
+  private stopTokenMonitor(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
+  }
+
+  private updateExpiresAt(): void {
+    if (this.tokenExpiry) {
+      const expiryDate = new Date(this.tokenExpiry);
+      this._tokenExpiresAt.set(expiryDate.toLocaleTimeString('pt-BR'));
+    }
   }
 
   private isTokenExpired(): boolean {
@@ -72,14 +110,46 @@ export class SigefService {
     return Date.now() >= this.tokenExpiry;
   }
 
+  async checkTokenValidity(): Promise<boolean> {
+    if (!this.bearerToken || this.isTokenExpired()) {
+      await this.refreshTokenIfNeeded();
+    }
+    return !!this.bearerToken && !this.isTokenExpired();
+  }
+
+  private async refreshTokenIfNeeded(): Promise<void> {
+    if (this.isRefreshing) return;
+    
+    this.isRefreshing = true;
+    this._apiStatus.set('refreshing');
+    
+    try {
+      if (this.refreshToken) {
+        await this.refreshAccessToken();
+      } else {
+        await this.autoAuthenticate();
+      }
+      this._apiStatus.set('connected');
+    } catch (err: any) {
+      console.error('[SIGEF] Falha ao verificar/renovar token:', err);
+      this._apiStatus.set('error');
+      this._error.set('Erro ao conectar com a API: ' + err.message);
+    } finally {
+      this.isRefreshing = false;
+    }
+  }
+
   private async autoAuthenticate(): Promise<void> {
     console.log('[SIGEF] Iniciando autenticacao automatica');
+    this._apiStatus.set('refreshing');
     try {
       await this.authenticate(environment.sigefUsername, environment.sigefPassword);
       console.log('[SIGEF] Autenticacao OK, token:', this.bearerToken?.substring(0, 20) + '...');
+      this._apiStatus.set('connected');
     } catch (err: any) {
       console.error('[SIGEF] Falha na autenticacao automatica:', err.message);
       this._error.set('Falha na autenticação: ' + err.message);
+      this._apiStatus.set('disconnected');
     }
   }
 
@@ -97,13 +167,15 @@ export class SigefService {
 
     if (!response.ok) {
       this._authenticated.set(false);
+      this._apiStatus.set('disconnected');
       throw new Error('Falha ao renovar token');
     }
 
     const data = await response.json();
     this.bearerToken = data.access;
-    this.tokenExpiry = Date.now() + (data.expire_in * 1000) - 60000;
+    this.tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000;
     this._authenticated.set(true);
+    this.updateExpiresAt();
   }
 
   setToken(token: string): void {
@@ -122,21 +194,25 @@ export class SigefService {
 
   async ensureAuthenticated(): Promise<void> {
     if (!this.bearerToken || this.isTokenExpired()) {
+      this._apiStatus.set('refreshing');
       if (this.refreshToken) {
         await this.refreshAccessToken();
       } else {
         await this.autoAuthenticate();
       }
+      this._apiStatus.set('connected');
     }
   }
 
   private async handleUnauthorized(): Promise<void> {
     this._authenticated.set(false);
+    this._apiStatus.set('refreshing');
     this.bearerToken = null;
     this.tokenExpiry = null;
     if (this.refreshToken) {
       try {
         await this.refreshAccessToken();
+        this._apiStatus.set('connected');
         return;
       } catch {
         this.refreshToken = null;
@@ -176,16 +252,17 @@ export class SigefService {
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          this._authenticated.set(false);
-          await this.autoAuthenticate();
+          await this.handleUnauthorized();
           return this.getNotaEmpenho(ano, search, page);
         }
         const errorText = await response.text();
         console.error('[SIGEF NE] Error response:', errorText);
+        this._apiStatus.set('error');
         throw new Error(`Erro na API: ${response.status} - ${response.statusText}`);
       }
 
       this._authenticated.set(true);
+      this._apiStatus.set('connected');
       const data = await response.json();
       console.log('[SIGEF NE] Response:', data);
       return {
@@ -284,6 +361,7 @@ export class SigefService {
   async authenticate(username: string, password: string): Promise<string> {
     this._loading.set(true);
     this._error.set(null);
+    this._apiStatus.set('refreshing');
 
     try {
       const url = `${this.apiUrl}/token/`;
@@ -303,6 +381,7 @@ export class SigefService {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[SIGEF AUTH] Error response:', errorText);
+        this._apiStatus.set('error');
         throw new Error('Credenciais inválidas: ' + response.status);
       }
 
@@ -312,14 +391,22 @@ export class SigefService {
       this.refreshToken = data.refresh || null;
       this.tokenExpiry = data.exp ? Date.now() + (data.exp * 1000) - 60000 : Date.now() + (3600 * 1000) - 60000;
       this._authenticated.set(true);
+      this._apiStatus.set('connected');
+      this.updateExpiresAt();
       return data.access;
     } catch (err: any) {
       console.error('[SIGEF AUTH] Erro capturado:', err);
       this._error.set(err.message || 'Erro na autenticação');
       this._authenticated.set(false);
+      this._apiStatus.set('disconnected');
       throw err;
     } finally {
       this._loading.set(false);
     }
+  }
+
+  async reconnect(): Promise<void> {
+    this._apiStatus.set('refreshing');
+    await this.autoAuthenticate();
   }
 }

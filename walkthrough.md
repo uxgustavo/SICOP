@@ -11,7 +11,7 @@ npm install
 ### Executar Ambiente de Desenvolvimento
 
 ```bash
-npm start
+npm run dev
 ```
 
 A aplicação estará disponível em `http://localhost:4200`
@@ -45,10 +45,75 @@ No header, há um seletor de ano que filtra todos os dados da aplicação confor
 - Alertas visuais para contratos próximos do vencimento (≤90 dias)
 
 ### Contratos
-- Lista com filtros e busca
-- Status: VIGENTE, FINALIZANDO (≤90 dias), RESCINDIDO
-- Detalhes com abas: Visão Geral, Aditivos, **Dotações**, **Financeiro**
-- Formulário de criação/edição de contratos
+
+#### Lista de Contratos
+- Abas para filtrar por status:
+  - **Vigentes**: Contratos ativos (não rescindidos e não expirados)
+  - **Finalizados**: Contratos expirados
+  - **Rescindidos**: Contratos rescindidos
+- Busca com 3+ caracteres que pesquisa em TODOS os contratos independente da aba
+- Layout em grid ou lista
+
+#### Formulário de Contrato
+Para criar ou editar um contrato:
+
+1. Clique em "Novo Contrato"
+2. Preencha os campos:
+   - **Número do Contrato** (ex: 124/2024)
+   - **Nº Processo SEI**
+   - **Fornecedor**: Digite para buscar (autocomplete). Se não encontrar, clique em "Cadastrar novo fornecedor"
+   - **Objeto do Contrato**
+   - **Data de Início** e **Data de Fim**
+   - **Valor Global (R$)**
+   - **Unidade Gestora**: 080101 - DPEMA ou 080901 - FADEP
+   - **Setor Responsável**: GABINETE, JURIDICO, ADMINISTRATIVO, etc.
+   - **Status Inicial**
+   - **Gestor do Contrato** (opcional)
+   - **Fiscal Administrativo** (opcional)
+   - **Fiscal Técnico** (opcional)
+3. Clique em "Salvar"
+
+#### Detalhes do Contrato
+A página de detalhes possui abas:
+- **Visão Geral**: Dados do contrato, objeto, informações financeiras
+- **Aditivos**: Lista de aditivos (criar, editar, excluir)
+- **Dotações**: Dotações orçamentárias vinculadas
+- **Financeiro**: Transações e Notas de Empenho
+
+### Aditivos
+
+#### Tipos de Aditivo
+- **ADITIVO_PRAZO**: Altera apenas o prazo de vigência
+- **ADITIVO_PRAZO_VALOR**: Altera prazo e valor simultaneamente
+- **ADITIVO_VALOR**: Altera apenas o valor
+- **ADITIVO_OBJETO**: Altera o objeto do contrato
+- **DISTRATO**: Rescisão antecipada
+- **ALTERACAO**: Alteração geral
+
+#### Criar Aditivo
+1. Na aba Aditivos do contrato, clique em "+ Aditivo"
+2. Preencha:
+   - **Número do Aditivo** (ex: 01/2026)
+   - **Tipo**: Selecione o tipo de aditivo
+   - **Data da Assinatura**
+   - **Nova Vigência** (obrigatório para tipos de prazo)
+   - **Valor do Aditivo**
+3. Clique em "Adicionar"
+
+#### Editar Aditivo
+1. Na lista de aditivos, clique no ícone de editar (lápis)
+2. Modifique os campos necessários
+3. Clique em "Salvar"
+
+#### Excluir Aditivo
+1. Na lista de aditivos, clique no ícone de excluir (lixeira)
+2. Confirme a exclusão
+
+#### Impacto nos Cards de Contrato
+Ao cadastrar um aditivo do tipo **ADITIVO_PRAZO** ou **ADITIVO_PRAZO_VALOR** com `nova_vigencia`, o sistema:
+- Atualiza automaticamente `data_fim_efetiva` do contrato
+- Recalcula `dias_restantes` baseado na nova data de término
+- Atualiza o `status_efetivo` (VIGENTE ou FINALIZANDO) conforme os dias restantes
 
 ### Aba Dotações
 - Criar nova dotação com formulário
@@ -56,19 +121,30 @@ No header, há um seletor de ano que filtra todos os dados da aplicação confor
 - Excluir dotação
 - Vincular Nota de Empenho via API SIGEF
 
+#### Card de Dotação
+Cada card de dotação exibe:
+- **Dotação**: Valor planejado
+- **Empenhado**: Valor que está engajado (buscado na API SIGEF via `vlnotaempenho`)
+- **Saldo (D - E)**: Diferença entre dotação e engajado (verde se positivo, vermelho se negativo)
+- Barra de progresso showing % utilizado
+- Ao entrar na página, o sistema busca automaticamente o valor engajado para cada dotação com NE vinculada
+
+#### Visualização em Tabela
+A tabela de dotações também exibe colunas: Dotação | Empenhado | Saldo com cores para indicar se há necessidade de reforço
+
 ### Aba Financeiro
 - KPIs: Total Empenhado, Total Pago, Saldo a Pagar
 - Tabela de lançamentos com coluna de Nota de Empenho
 - Exibe NE vinculada a cada lançamento
 
-### Integração SIGEF
+## Integração SIGEF
 
-#### Autenticação
+### Autenticação
 - Automática com credenciais do ambiente
 - Token armazenado em memória
 - Refresh automático quando expirado
 
-#### Consulta de Nota de Empenho
+### Consulta de Nota de Empenho
 1. Selecione a **Unidade Gestora**:
    - **080101** - DPEMA
    - **080901** - FADEP
@@ -92,10 +168,12 @@ Requisições para `/sigef-api/*` são redirecionadas para `https://api.seplan.m
 
 ### Tabelas do Supabase
 - `contratos` - Cadastro de contratos
-- `aditivos` - Aditivos de contratos
+- `aditivos` - Aditivos de contratos (com FK para tipo_aditivo)
+- `tipo_aditivo` - Tipos de aditivo disponíveis
 - `dotacoes` - Dotações orçamentárias (com campo `nunotaempenho` para vinculação de NE)
 - `fornecedores` - Cadastro de fornecedores
 - `vw_saldo_dotacoes` - View com saldos das dotações
+- `vw_contratos_vigencia` - View com contratos e vigência efetiva
 
 ### Integração com SIGEF
 A API retorna Notas de Empenho com os campos:

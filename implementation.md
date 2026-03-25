@@ -22,28 +22,38 @@ src/
 │       └── error-handler.service.ts
 ├── features/
 │   ├── dashboard/            # Página inicial com métricas
-│   ├── contracts/            # Gestão de contratos
-│   ├── financial/            # Dados financeiros
-│   ├── budget/               # Orçamento (dotações)
+│   ├── contracts/           # Gestão de contratos
+│   │   ├── pages/           # Páginas (contracts, contract-details)
+│   │   ├── components/      # Componentes (contract-card, contract-form, aditivo-form, etc.)
+│   │   └── services/        # Services (contract.service.ts)
+│   ├── financial/           # Dados financeiros
+│   ├── budget/              # Orçamento (dotações)
 │   ├── suppliers/           # Fornecedores
 │   └── nota-empenho/        # Consulta NE via SIGEF
 ├── shared/
-│   ├── components/           # Componentes reutilizáveis
-│   ├── models/               # TypeScript interfaces
-│   └── utils/                # Funções utilitárias
+│   ├── components/          # Componentes reutilizáveis
+│   ├── models/              # TypeScript interfaces
+│   └── utils/               # Funções utilitárias
 └── environments/             # Configurações por ambiente
 ```
 
 ## Modelos de Dados Principais
 
 ### Contract
-- `id`, `contrato`, `contratada`, `data_inicio`, `data_fim`
-- `valor_anual`, `status`, `setor_id`, `objeto`
+- `id`, `contrato`, `contratada`, `fornecedor_id`
+- `data_inicio`, `data_fim`
+- `valor_anual`, `status`, `setor_id`, `unid_gestora`
+- `objeto`
+- `gestor_contrato`, `fiscal_admin`, `fiscal_tecnico`
 - `data_fim_efetiva`, `dias_restantes`, `status_efetivo`
 
 ### Aditivo
 - `id`, `contract_id`, `numero_aditivo`, `tipo`
 - `data_assinatura`, `nova_vigencia`, `valor_aditivo`
+
+### TipoAditivo
+- `id`, `nome` (ADITIVO_PRAZO, ADITIVO_PRAZO_VALOR, DISTRATO, etc.)
+- `descricao`, `ativo`
 
 ### Dotacao
 - `id`, `contract_id`, `numero_contrato`, `dotacao`
@@ -51,19 +61,43 @@ src/
 - `valor_dotacao`, `nunotaempenho` (vínculo com NE)
 - `total_empenhado`, `total_pago`, `saldo_disponivel`
 
+### Supplier
+- `id`, `razao_social`, `nome_fantasia`, `cnpj`
+- `email`, `telefone`, `categoria`, `endereco`
+- `status` (ACTIVE, INACTIVE, BLOCKED), `desde`
+
 ### NotaEmpenho (SIGEF - API)
 - `nunotaempenho`, `cdunidadegestora`, `cdgestao`, `cdcredor`
 - `dtlancamento`, `tipo`, `cdnaturezadespesa`, `vlnotaempenho`
 - `demodalidadeempenho`, `nuprocesso`, `dehistorico`, etc.
 
-### Transaction
-- `id`, `contract_id`, `description`, `commitment_id`, `date`
-- `type`, `amount`, `nunotaempenho` (NE vinculada)
-
 ## Unidades Gestoras Suportadas
 
 - **080101** - DPEMA (Defensoria Pública do Estado do Maranhão)
 - **080901** - FADEP (Fundo de Aparência da Defensoria Pública)
+
+## Setores Disponíveis
+
+- GABINETE
+- JURIDICO
+- ADMINISTRATIVO
+- FINANCEIRO
+- COMPRAS
+- TECNOLOGIA
+- RECURSOS_HUMANOS
+- LICITAÇÕES
+
+## Tipos de Aditivo
+
+| Tipo | Descrição | Altera Prazo | Altera Valor |
+|------|-----------|--------------|--------------|
+| ADITIVO_PRAZO | Aditivo de Prazo | ✅ | ❌ |
+| ADITIVO_PRAZO_VALOR | Aditivo de Prazo e Valor | ✅ | ✅ |
+| ADITIVO_VALOR | Aditivo de Valor | ❌ | ✅ |
+| ADITIVO_OBJETO | Aditivo de Objeto | ❌ | ❌ |
+| DISTRATO | Distrato | ❌ | ❌ |
+| PRORROGACAO | Prorrogação (legado) | ✅ | ❌ |
+| ALTERACAO | Alteração (legado) | ❌ | ❌ |
 
 ## Regras de Negócio
 
@@ -72,10 +106,75 @@ src/
 - **FINALIZANDO**: Contrato com ≤90 dias restantes
 - **RESCINDIDO**: Contrato rescindido
 
+### Cálculo de Vigência Efetiva
+
+O sistema recalcula automaticamente a vigência efetiva do contrato quando há aditivos:
+
+```typescript
+// 1. Identificar aditivos que alteram o prazo
+const aditivosComVigencia = aditivos.filter(a => {
+  const tipo = a.tipo.toUpperCase();
+  return a.nova_vigencia && (tipo.includes('PRAZO') || tipo === 'PRORROGACAO');
+});
+
+// 2. Usar a data de vigência mais recente
+const dataFimEfetiva = aditivosComVigencia[0]?.nova_vigencia || dataFimOriginal;
+
+// 3. Recalcular dias restantes
+const diasRestantes = Math.ceil((dataFimEfetiva - hoje) / dias);
+
+// 4. Atualizar status efetivo
+const statusEfetivo = diasRestantes <= 90 ? 'FINALIZANDO' : 'VIGENTE';
+```
+
+### Acompanhamento de Dotações e Empenho
+
+O sistema busca automaticamente os valores de engajamento das dotações via API SIGEF:
+
+```typescript
+// 1. Para cada dotação com NE vinculada
+if (budget.nunotaempenho) {
+  // 2. Buscar detalhes da NE na API
+  const neDetails = await sigefService.getNotaEmpenhoByNumber(
+    currentYear,
+    budget.nunotaempenho,
+    budget.unid_gestora
+  );
+  
+  // 3. Extrair vlnotaempenho
+  const vlEmpenhado = neDetails.vlnotaempenho || 0;
+  
+  // 4. Calcular saldo = Dotação - Empenhado
+  const saldo = budget.valor_dotacao - vlEmpenhado;
+}
+```
+
+**Regras de Negócio:**
+- A consulta à API ocorre **apenas uma vez** ao entrar na página de detalhes
+- Não há re-atualização automática para evitar sobrecarga da API SIGEF
+- O saldo pode ser negativo (vermelho) indicando necessidade de reforço
+- Filtro por ano: apenas dotações do ano atual são somadas nos KPIs
+
+**Importante**: O tipo do aditivo é obtido via relação `tipo_aditivo(nome)` no Supabase.
+
+### Abas de Contratos
+- **Vigentes**: Contratos não rescindidos e não expirados (com filtro por ano de exercício)
+- **Finalizados**: Contratos expirados (mostra todos independente do ano)
+- **Rescindidos**: Contratos rescindidos (mostra todos independente do ano)
+
+### Busca de Contratos
+- Quando o usuário digita 3+ caracteres, a busca retorna TODOS os contratos independente da aba selecionada
+- A busca pesquisa por: número do contrato, nome da contratada, status
+
 ### Valor Atualizado do Contrato
 ```typescript
 valorAtualizado = valorAnualOriginal + sum(Aditivos.valor_aditivo)
 ```
+
+### Gestão de Aditivos
+- CRUD completo: Create, Read, Update, Delete
+- Ao salvar/excluir aditivo, atualiza automaticamente a lista de aditivos
+- Campos: número, tipo, data assinatura, nova vigência, valor
 
 ### Consulta de Notas de Empenho
 - A busca considera **Unidade Gestora + Número da NE**
@@ -109,39 +208,49 @@ O Angular utiliza proxy para redirecionar requisições para a API SIGEF:
 }
 ```
 
-**Nota**: O servidor deve rodar na porta 4200 para o proxy funcionar corretamente (`npm start`).
+**Nota**: O servidor deve rodar na porta 4200 para o proxy funcionar corretamente (`npm run dev`).
 
 ## Configuração do Banco (Supabase)
 
-### Tabela dotacoes
+### Tabela tipo_aditivo
 ```sql
-CREATE TABLE public.dotacoes (
+CREATE TABLE public.tipo_aditivo (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    contract_id UUID REFERENCES public.contratos(id) ON DELETE CASCADE,
-    numero_contrato TEXT NOT NULL,
-    dotacao TEXT NOT NULL,
-    credito TEXT NOT NULL,
-    data_disponibilidade DATE NOT NULL,
-    unid_gestora TEXT NOT NULL,
-    valor_dotacao NUMERIC(15,2) NOT NULL DEFAULT 0,
-    nunotaempenho TEXT,
+    nome TEXT NOT NULL UNIQUE,
+    descricao TEXT,
+    ativo BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
-### View vw_saldo_dotacoes
+### Tabela aditivos (com FK)
 ```sql
-CREATE VIEW public.vw_saldo_dotacoes AS
+CREATE TABLE public.aditivos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contract_id UUID REFERENCES public.contratos(id) ON DELETE CASCADE,
+    tipo_id UUID REFERENCES public.tipo_aditivo(id),
+    numero_contrato TEXT,
+    numero_aditivo TEXT NOT NULL,
+    tipo TEXT NOT NULL DEFAULT 'ALTERACAO',
+    data_assinatura DATE,
+    nova_vigencia DATE,
+    valor_aditivo NUMERIC(15,2),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### View vw_contratos_vigencia
+```sql
+CREATE VIEW public.vw_contratos_vigencia AS
 SELECT 
-    d.id, d.contract_id, d.numero_contrato, c.contratada,
-    d.dotacao, d.credito, d.data_disponibilidade, d.unid_gestora,
-    d.valor_dotacao, d.nunotaempenho,
-    0 AS total_empenhado, 0 AS total_cancelado, 0 AS total_pago,
-    d.valor_dotacao AS saldo_disponivel,
-    d.created_at, d.updated_at
-FROM public.dotacoes d
-LEFT JOIN public.contratos c ON d.contract_id = c.id;
+    c.*,
+    c.data_fim AS data_fim_efetiva,
+    -- Calculation handled in frontend based on additives
+    NULL AS dias_restantes,
+    NULL AS status_efetivo
+FROM public.contratos c;
 ```
 
 ## Fluxo de Funcionalidades
@@ -152,13 +261,25 @@ LEFT JOIN public.contratos c ON d.contract_id = c.id;
 3. Sistema consulta API SIGEF considerando UG + NE
 4. Exibe dados da NE (valor, data, credor, histórico)
 
-### 2. Gestão de Dotações
+### 2. Gestão de Contratos
+1. Lista com abas: Vigentes, Finalizados, Rescindidos
+2. Busca com 3+ caracteres em todos os contratos
+3. Formulário com autocomplete de fornecedores
+4. Campos: UG, Setor, Gestor, Fiscais
+
+### 3. Gestão de Aditivos
+1. Criar, editar, excluir aditivos
+2. Seleção de tipo: ADITIVO_PRAZO, ADITIVO_PRAZO_VALOR, etc.
+3. Campo nova_vigencia aparece para tipos com prazo
+4. Atualização automática do card com nova vigência efetiva
+
+### 4. Gestão de Dotações
 1. Acessar contrato → aba Dotações
 2. Criar nova dotação ou editar existente
 3. Vincular Nota de Empenho (busca via SIGEF)
-4. Sistema exibe saldo, total empenhado
+4. Sistema exibe saldo, total emprenado
 
-### 3. Lançamentos Financeiros
+### 5. Lançamentos Financeiros
 1. Exibe NE vinculada na tabela de lançamentos
 2. Totais: Empenhado, Pago, Saldo a Pagar
 
@@ -168,3 +289,17 @@ O projeto utiliza ferramentas nativas do Angular. Para validação:
 ```bash
 npm run build
 ```
+
+## Migrações do Banco
+
+### 001_create_dotacoes.sql
+- Criação da tabela dotacoes
+
+### 002_create_setores_e_tipos_aditivo.sql
+- Criação da tabela tipo_aditivo
+- População dos tipos: ADITIVO_PRAZO, ADITIVO_PRAZO_VALOR, DISTRATO, ADITIVO_VALOR, ADITIVO_OBJETO
+
+### 003_add_fk_aditivos_tipo_aditivo.sql
+- Adiciona coluna tipo_id na tabela aditivos
+- Cria Foreign Key entre aditivos e tipo_aditivo
+- Popula tipo_id baseado no campo tipo existente
